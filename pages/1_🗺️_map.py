@@ -9,6 +9,7 @@ import numpy as np
 st.set_page_config(page_title="Plotting Demo", page_icon="🗺️")
 
 
+
 today = datetime.date.today()
 tomorrow = today + datetime.timedelta(days=1)
 start_date = st.sidebar.date_input('Data Inicial', datetime.date(2012,1,1))
@@ -19,14 +20,9 @@ else:
     st.sidebar.error('Error: Data Final deve ser após a Data inicial.')
 
 
-add_check_box = st.sidebar.radio("**Indicadores**", ["Dias transcorridos desde o último monitoaramento",
+add_check_box = st.sidebar.radio("**Camadas**", ["Dias transcorridos desde o último monitoaramento",
                                                   "Detecções por hora", 
                                                   "Dias desde o último manejo "])
-
-
-
-
-
 
 
 
