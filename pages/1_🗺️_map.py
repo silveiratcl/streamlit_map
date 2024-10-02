@@ -23,7 +23,8 @@ else:
 
 add_check_box = st.sidebar.radio("**Camadas**", ["Dias transcorridos desde o último monitoaramento",
                                                   "Detecções por hora", 
-                                                  "Dias desde o último manejo "])
+                                                  "Dias desde o último manejo ",
+                                                  "Manejos"])
 
 
 
