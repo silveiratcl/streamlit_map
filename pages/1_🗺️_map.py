@@ -10,6 +10,7 @@ st.set_page_config(page_title="Plotting Demo", page_icon="🗺️")
 
 
 
+
 today = datetime.date.today()
 tomorrow = today + datetime.timedelta(days=1)
 start_date = st.sidebar.date_input('Data Inicial', datetime.date(2012,1,1))
