@@ -10,3 +10,5 @@ if data is not None:
     st.dataframe(data)  # Display the DataFrame in the Streamlit app
 else:
     st.write("No data available or there was an error fetching the data.")
+
+    #1_🗺️_map.py

@@ -1,3 +1,7 @@
+import mysql.connector
+import pandas as pd
+from config.db_config import db_config
+
 def explore_table(data_coralsol_dafor):
     try:
         # Establish the connection
@@ -12,18 +16,16 @@ def explore_table(data_coralsol_dafor):
         rows = cursor.fetchall()
         column_names = [i[0] for i in cursor.description]
 
-        # Display the data
-        if rows:
-            print(f"\nData from table {data_coralsol_dafor}:")
-            print(column_names)
-            for row in rows:
-                print(row)
-        else:
-            print(f"No data found in table {data_coralsol_dafor}.")
+        # Convert the result into a pandas DataFrame
+        df = pd.DataFrame(rows, columns=column_names)
 
         # Close the cursor and connection
         cursor.close()
         connection.close()
 
+        # Return the DataFrame
+        return df
+
     except mysql.connector.Error as err:
         print(f"Error: {err}")
+        return None
