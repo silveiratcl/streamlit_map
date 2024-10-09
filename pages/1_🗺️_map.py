@@ -21,11 +21,11 @@ else:
     st.sidebar.error('Error: Data Final deve ser após a Data inicial.')
 
 
-add_check_box = st.sidebar.radio("**Camadas**", ["Dias transcorridos desde o último monitoaramento",
+add_check_box = st.sidebar.radio("**Camadas**", ["Dias transcorridos desde o último monitoramento",
                                                   "Detecções por hora", 
                                                   "Dias desde o último manejo ",
-                                                  "Manejos"])
-
+                                                  "Manejos",
+                                                  "Localidades"])
 
 
 
