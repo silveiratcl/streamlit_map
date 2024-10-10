@@ -5,17 +5,15 @@ st.set_page_config(page_title="Docs", page_icon="📃")
 st.markdown(
 
 """    
-Overview
+## Overview
 A dashboard is an incredibly valuable tool that empowers users to effortlessly visualize and make sense of complex data. By acting as a centralized hub, it presents a wealth of essential metrics, trends, and insights in a visually captivating format. This makes it an ideal solution for environmental agencies seeking to acquire valuable resources for the Early Detection - Quick Response (EDQR) of invasive species. In this documentation, we will explore the pivotal components of data interpretation in the Sun Coral Monitoring Dashboard - PACS REBIO Arvoredo. The dashboard was developed using QGIS to digitize de database and the R to develop the dashboard.
 
 
 
-***Monitoring Protocol***
-Spatial reference
+## Monitoring Protocol
+### Spatial reference
 The monitoring data is obtained in localities, in the locality is defined a segment, and in the extension of a segment are obtained information linked to 1 minute transects recorded by the divers.
 
-Spatial reference
-![Spatial reference]('./assets/about_local.png')
 """
 )
 
@@ -26,14 +24,13 @@ st.image('./assets/about_local.png', caption='teste paste pic')
 
 st.markdown(
 """    
-Active search
+### Active search
 Snorkelling - Floatation In the depth range of zero to 2 meters of the sampling segment, monitoring will be carried out by a snorkelling diver. The diver will search within this depth range, covering the sampling segment and looking for possible occurrences of sun coral.
 Autonomous Diving The active search technique for sun coral colonies will be employed in each sampling segment. Autonomous diving samples will be conducted by two pairs of divers. The operational area for each pair will be determined by depth ranges (e.g., from 0 to 8m and from 9 to 15m) along the rocky shore, aiming to cover the greatest vertical extension possible. The division of scanning depths between the pairs may vary depending on the bathymetric characteristics of each sampling segment.
 Monitoring
 Monitoring
 
-
-DAFOR
+### DAFOR
 To classify the invasion levels in the sampled segments, we utilize a semi-quantitative scale of abundance known as the DAFOR scale (Sutherland, 2006), specifically adapted for assessing the abundance of sun coral (Creed & Fleury, 2009). The scale assigns values to each relative abundance class, which are described as follows:
 
 Dominant: This category represents highly evident populations that form predominantly monospecific patches of at least 1m². These patches contain numerous isolated colonies and/or smaller patches scattered throughout the substrate.
@@ -44,9 +41,7 @@ Rare: This category encompasses instances where between 1 and 5 colonies are spa
 Absent: In this class, no records of sun coral occurrences are found.
 During the assessment process, divers move along transects delimited by 1 minute of sampling. Observations made on the DAFOR scale are then converted to a relative abundance index (RAI) using the following classification: 10 - dominant, 8 - abundant, 6 - frequent, 4 - occasional, 2 - rare; zero - absent.
 
-
-
-Rocky Shore Geomorphology
+### Rocky Shore Geomorphology
 For each monitored segment, we record information about the geomorphological structure of the rocky shores. The aim is to document the presence of different geomorphologies on a semi-quantitative scale of area, which helps identify and quantify the relevant structures related to the occurrence and absence of sun coral. The assessment method is described in Silveira et al. (2023).
 
 The assessed geomorphologies are as follows:
@@ -68,10 +63,10 @@ During the assessment, divers move along transects delimited by 5 minutes of sam
 
 HSI=(CrCr+BC+SMR+(−1∗(FS−10))+(−1∗(CC−10)))/5
 
+## Data displayed on Map
 
+### Indicators
 
-Data displayed on Map
-Indicators
 Transects with Sun Coral (TWSC): Number of sun coral transects within the locality limits. This metric compensates for the low relative abundances assessed by DAFOR. Selecting a date controls the displayed data period on the map.
 Habitat Suitability Index (HSI): Average HSI value calculated for the locality. Selecting a date controls the displayed data period on the map.
 TWSC/1000m: Number of sun coral transects within the locality limits per 1000 meters of monitoring effort. Selecting a date controls the displayed data period on the map.
@@ -96,7 +91,8 @@ Dive Time: Sun of dive time by all pair of divers in the monitoring data.
 
 
 
-References and useful links
+### References and useful links
+
 CREED, J.C.; FLEURY, B.G. 2009. Monitoramento extensivo de coral-sol (Tubastraea coccinea e T. tagusensis): protocolo de semi-quantificação. Projeto Coral-Sol, Instituto Biodiversidade Marinha, Rio de Janeiro. p 1.
 
 CREED JC; JUNQUEIRA ADOR, FLEURY BG, MANTELLATO MC, OIGMAN-PSZCZOL SS. 2017. The Sun-Coral Project: the first social-environmental initiative to manage the biological invasion of Tubastraea spp. in Brazil. Management of Biological Invasions 8(2): 181.

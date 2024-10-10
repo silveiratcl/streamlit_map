@@ -1,39 +1,25 @@
 import streamlit as st
-import webbrowser
-import pandas as pd
-from datetime import datetime
-import openai
-
-if "data" not in st.session_state:
-    df_data = pd.read_csv("datasets/CLEAN_FIFA23_official_data.csv", index_col=0)
-    df_data = df_data[df_data["Contract Valid Until"] >= datetime.today().year]
-    df_data = df_data[df_data["Value(£)"] > 0]
-    df_data = df_data.sort_values(by="Overall", ascending=False)
-    st.session_state["data"] = df_data
-
-st.markdown("# FIFA23 OFFICIAL DATASET! ⚽️")
-st.sidebar.markdown("Desenvolvido por [Asimov Academy](https://asimov.academy)")
-
-
-btn = st.link_button(
-    "Acesse os dados no Kaggle",
-    "https://www.kaggle.com/datasets/kevwesophia/fifa23-official-datasetclean-data"
-    )
 
 
 st.markdown(
     """
-    O conjunto de dados
-    de jogadores de futebol de 2017 a 2023 fornece informações 
-    abrangentes sobre jogadores de futebol profissionais.
-    O conjunto de dados contém uma ampla gama de atributos, incluindo dados demográficos 
-    do jogador, características físicas, estatísticas de jogo, detalhes do contrato e 
-    afiliações de clubes. 
-    
-    Com **mais de 17.000 registros**, este conjunto de dados oferece um recurso valioso para 
-    analistas de futebol, pesquisadores e entusiastas interessados em explorar vários 
-    aspectos do mundo do futebol, pois permite estudar atributos de jogadores, métricas de 
-    desempenho, avaliação de mercado, análise de clubes, posicionamento de jogadores e 
-    desenvolvimento do jogador ao longo do tempo.
+    ## Lorem ipsum dolor sit amet
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in magna tempor tellus aliquet viverra mollis in urna. Cras hendrerit blandit erat,
+      vel interdum quam tempor vel. Duis semper, ante a bibendum sodales, risus dui volutpat risus, ut iaculis elit ipsum in odio. Maecenas lacinia diam 
+      id tortor pellentesque, in tincidunt justo vulputate. Quisque a gravida mauris, nec facilisis magna. Etiam vel egestas ex, sit amet laoreet augue. 
+      In accumsan lacus non odio lacinia porttitor. Curabitur at purus non lacus lobortis feugiat nec vel felis. Etiam lobortis odio ut risus tristique commodo 
+      eu nec diam. Vestibulum condimentum sem ac nunc faucibus maximus. Nunc volutpat arcu gravida nisl fermentum, vel placerat est rhoncus. Etiam ut massa ligula. 
+      Pellentesque semper blandit arcu.
+
+    Quisque et feugiat massa. Integer tincidunt purus at lectus ultrices, nec rhoncus mi vestibulum. Aliquam euismod, leo ac fringilla molestie, odio elit fermentum dolor, ]
+    aliquet vestibulum velit orci quis elit. Vivamus erat turpis, consectetur et congue sed, maximus vel diam. Etiam dignissim, odio ut bibendum faucibus, nunc dolor dictum erat, 
+    at blandit ipsum massa ut leo. Mauris tellus lectus, cursus quis nulla dapibus, faucibus efficitur enim. Nam dictum erat lacus, in malesuada nisl fermentum sit amet. Maecenas nisl est, 
+    tempor id enim quis, dictum hendrerit libero. Suspendisse bibendum elit eget velit posuere volutpat. Quisque ac nunc porttitor, cursus nisi eget, cursus odio. Aliquam facilisis felis dolor,
+    eu tincidunt magna malesuada in. Nam tincidunt nunc ac diam scelerisque, eu sagittis nunc interdum.
+
+    Aliquam at dui sed massa semper consectetur in auctor tellus. Suspendisse eu urna et tortor dignissim ultricies pharetra ac nibh. Aenean eu pulvinar elit. Sed ut tortor urna. Proin ultrices vel tortor 
+    vitae vehicula. Suspendisse potenti. Vestibulum porta, nibh nec aliquet euismod, augue ligula laoreet elit, id pulvinar ante eros a metus. Etiam et pharetra nibh. Maecenas erat neque, ultricies eget 
+    malesuada eu, aliquet et nunc. Mauris id commodo elit.
 """
 )
