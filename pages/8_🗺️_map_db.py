@@ -7,7 +7,7 @@ import ast  # To parse Management_coords and coords_local stored as string
 import time
 from folium.plugins import MarkerCluster
 
-st.set_page_config(page_title="Plotting Demo", page_icon="🗺️")
+st.set_page_config(page_title="Map", page_icon="🗺️")
 
 # Initialize connection using the credentials from `secrets.toml`
 conn = st.connection('apibd06', type='sql')
