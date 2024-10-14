@@ -1,5 +1,5 @@
 import streamlit as st
-
+st.logo('./assets/logo.png')
 
 st.markdown(
     """
