@@ -1,5 +1,6 @@
-streamlit
-openai
-folium
-mysqlclient
-SQLAlchemy
+mysql-connector-python==9.0.0
+mysqlclient==2.2.4
+openai==1.51.
+SQLAlchemy==2.0.35
+streamlit_folium==0.21.0
+streamlit-leaflet==0.1.0
