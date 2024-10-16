@@ -1,2 +1,5 @@
 streamlit
 openai
+folium
+mysqlclient
+SQLAlchemy
