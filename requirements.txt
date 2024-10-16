@@ -1,2 +1,4 @@
 mysqlclient==2.2.4
 SQLAlchemy==2.0.35
+streamlit
+openai
