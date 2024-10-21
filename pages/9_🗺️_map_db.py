@@ -6,11 +6,24 @@ import pandas as pd
 import ast  # To parse Management_coords and coords_local stored as string
 import time
 from folium.plugins import MarkerCluster
+from sqlalchemy import create_engine
 
 st.set_page_config(page_title="Map", page_icon="🗺️")
 
-# Initialize connection using the credentials from `secrets.toml`
-conn = st.connection('apibd06', type='sql')
+# Initialize connection using SQLAlchemy and credentials from `secrets.toml`
+def init_connection():
+    connection_details = st.secrets["connections"]["apibd06"]
+    connection_string = (
+        f"{connection_details['dialect']}+{connection_details['driver']}://"
+        f"{connection_details['username']}:{connection_details['password']}@"
+        f"{connection_details['host']}:{connection_details['port']}/"
+        f"{connection_details['database']}"
+    )
+    engine = create_engine(connection_string)
+    return engine.connect()
+
+# Establish the connection
+conn = init_connection()
 
 # Convert Streamlit date (YYYY-MM-DD) to DD/MM/YYYY format
 def format_date_to_ddmmyyyy(date):
@@ -19,13 +32,13 @@ def format_date_to_ddmmyyyy(date):
 # Fetch marker data
 def get_marker_data():
     query = "SELECT management_id, Management_coords, Observer, Date FROM data_coralsol_management"
-    df = conn.query(query, ttl=600)
+    df = pd.read_sql(query, conn)
     return df
 
 # Fetch line data
 def get_line_data():
     query = "SELECT locality_id, coords_local, name, date FROM data_locality"
-    df = conn.query(query, ttl=600)
+    df = pd.read_sql(query, conn)
     return df
 
 # Sidebar for date input
