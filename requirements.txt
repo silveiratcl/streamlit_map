@@ -4,3 +4,4 @@ openai
 SQLAlchemy
 streamlit_folium
 streamlit-leaflet
+streamlit
