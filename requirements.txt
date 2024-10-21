@@ -2,3 +2,4 @@ streamlit
 pymysql
 SQLAlchemy
 folium
+streamlit_folium
