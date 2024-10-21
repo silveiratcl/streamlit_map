@@ -12,6 +12,12 @@ st.set_page_config(page_title="Map", page_icon="🗺️")
 # Initialize connection using the credentials from `secrets.toml`
 conn = st.connection('apibd06', type='sql')
 
+
+
+
+
+
+
 # Convert Streamlit date (YYYY-MM-DD) to DD/MM/YYYY format
 def format_date_to_ddmmyyyy(date):
     return date.strftime('%d/%m/%Y')
