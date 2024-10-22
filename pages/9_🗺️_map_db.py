@@ -25,6 +25,9 @@ def init_connection():
 # Establish the connection
 conn = init_connection()
 
+### debugging
+st.write(st.secrets)
+
 # Convert Streamlit date (YYYY-MM-DD) to DD/MM/YYYY format
 def format_date_to_ddmmyyyy(date):
     return date.strftime('%d/%m/%Y')
