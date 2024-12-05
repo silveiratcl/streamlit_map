@@ -145,6 +145,6 @@ if show_lines:
 
 # Render the Folium map in Streamlit
 time.sleep(1)
-st_data = st_folium(m, width=700)
+st_data = st_folium(m, width=700, height=700)
 
  
