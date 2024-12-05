@@ -14,7 +14,7 @@ st.set_page_config(page_title="Map", page_icon="🗺️")
 def init_connection():
     try:
         # Debugging: Show the structure of st.secrets
-        st.write(st.secrets)
+        #st.write(st.secrets)
 
         # Access connection details from secrets
         connection_details = st.secrets["connections"]["apibd06"]
@@ -147,4 +147,4 @@ if show_lines:
 time.sleep(1)
 st_data = st_folium(m, width=700)
 
-st.write(st.secrets)
+ 
