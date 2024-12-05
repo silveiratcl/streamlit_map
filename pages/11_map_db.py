@@ -13,6 +13,9 @@ st.set_page_config(page_title="Map", page_icon="🗺️")
 # Initialize connection using SQLAlchemy and credentials from `secrets.toml`
 def init_connection():
     try:
+        # Debugging: Show the structure of st.secrets
+        st.write(st.secrets)
+
         # Access connection details from secrets
         connection_details = st.secrets["connections"]["apibd06"]
         connection_string = (
@@ -25,11 +28,12 @@ def init_connection():
         engine = create_engine(connection_string)
         return engine.connect()
     except KeyError as e:
-        st.error(f"KeyError: {e}. Check your secrets.toml structure.")
+        st.error(f"KeyError: {e}. Check your secrets.toml structure or Streamlit Cloud settings.")
         raise
     except Exception as e:
         st.error(f"An error occurred while connecting to the database: {e}")
         raise
+
 
 # Establish the connection
 conn = init_connection()
