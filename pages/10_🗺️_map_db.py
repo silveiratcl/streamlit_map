@@ -143,4 +143,3 @@ if show_lines:
 time.sleep(1)
 st_data = st_folium(m, width=700)
 
-st.write(st.secrets)
