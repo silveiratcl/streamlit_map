@@ -50,7 +50,7 @@ def get_marker_data():
 
 # Fetch line data
 def get_line_data():
-    query = "SELECT locality_id, coords_local, name, date FROM data_locality"
+    query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
     df = pd.read_sql(query, conn)
     return df
 
@@ -73,7 +73,8 @@ show_markers = st.sidebar.checkbox("Show Markers", value=True)
 show_lines = st.sidebar.checkbox("Show Lines", value=True)
 
 # Initialize Folium map
-m = folium.Map(location=[-13.003758, -38.533221], zoom_start=12, tiles="Esri.WorldImagery")
+m = folium.Map(location=[-27.281798, -48.366133], zoom_start=12, tiles="Esri.WorldImagery")
+#-48.366133,-27.281798
 
 # Display markers if selected
 if show_markers:
