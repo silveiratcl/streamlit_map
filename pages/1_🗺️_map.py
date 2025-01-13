@@ -27,6 +27,14 @@ add_check_box = st.sidebar.radio("**Camadas**", ["Dias transcorridos desde o úl
                                                   "Localidades"])
 
 
+add_check_box = st.sidebar._checkbox( "Dias transcorridos desde o último monitoramento",
+                                        "Detecções por hora", 
+                                        "Dias desde o último manejo ",
+                                        "Manejos",
+                                        "Localidades")
+
+
+
 
 m = folium.Map(location=[-27.28878,-48.36812],
                zoom_start=12,

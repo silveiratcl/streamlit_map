@@ -1,14 +1,21 @@
 import streamlit as st
 from sqlalchemy import create_engine
 import pandas as pd
+import numpy as np
 import folium
 from streamlit_folium import st_folium
 import ast
 import datetime
 import time
 from folium.plugins import MarkerCluster
+from folium.plugins import Fullscreen
 
-st.set_page_config(page_title="Map", page_icon="🗺️")
+st.set_page_config(page_title="Map", 
+                   page_icon="🗺️", 
+                   layout = "wide")
+
+
+
 
 # Initialize connection using SQLAlchemy and credentials from `secrets.toml`
 def init_connection():
@@ -54,13 +61,16 @@ def get_line_data():
     df = pd.read_sql(query, conn)
     return df
 
+
+
+
 # Sidebar for date input
 today = datetime.date.today()
 tomorrow = today + datetime.timedelta(days=1)
 start_date = st.sidebar.date_input('Data Inicial', datetime.date(2012, 1, 1))
 end_date = st.sidebar.date_input('Data Final', tomorrow)
 if start_date < end_date:
-    st.sidebar.success(f'Start date: {start_date}\nEnd date: {end_date}')
+    st.sidebar.success(f'Start date: {start_date} \nEnd date: {end_date}')
 else:
     st.sidebar.error('Error: Data Final deve ser após a Data inicial.')
 
@@ -75,6 +85,8 @@ show_lines = st.sidebar.checkbox("Show Lines", value=True)
 # Initialize Folium map
 m = folium.Map(location=[-27.281798, -48.366133], zoom_start=12, tiles="Esri.WorldImagery")
 #-48.366133,-27.281798
+
+Fullscreen().add_to(m)
 
 # Display markers if selected
 if show_markers:
@@ -145,7 +157,6 @@ if show_lines:
             st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
 
 # Render the Folium map in Streamlit
-time.sleep(1)
-st_data = st_folium(m, width=700, height=700)
 
- 
+time.sleep(1)
+st_data = st_folium(m, width= '100%', height='1000')

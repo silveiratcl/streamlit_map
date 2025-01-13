@@ -6,7 +6,13 @@ st.markdown(
 
 """    
 ## Overview
-A dashboard is an incredibly valuable tool that empowers users to effortlessly visualize and make sense of complex data. By acting as a centralized hub, it presents a wealth of essential metrics, trends, and insights in a visually captivating format. This makes it an ideal solution for environmental agencies seeking to acquire valuable resources for the Early Detection - Quick Response (EDQR) of invasive species. In this documentation, we will explore the pivotal components of data interpretation in the Sun Coral Monitoring Dashboard - PACS REBIO Arvoredo. The dashboard was developed using QGIS to digitize de database and the R to develop the dashboard.
+A dashboard is an incredibly valuable tool that empowers users to effortlessly 
+visualize and make sense of complex data. By acting as a centralized hub, it presents
+a wealth of essential metrics, trends, and insights in a visually captivating format. 
+This makes it an ideal solution for environmental agencies seeking to acquire valuable
+resources for the Early Detection - Quick Response (EDQR) of invasive species. In this
+documentation, we will explore the pivotal components of data interpretation in the Sun 
+Coral Monitoring Dashboard - PACS REBIO Arvoredo. 
 
 
 
