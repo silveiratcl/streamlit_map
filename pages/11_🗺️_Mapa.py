@@ -49,9 +49,9 @@ conn = init_connection()
 def format_date_to_ddmmyyyy(date):
     return date.strftime('%d/%m/%Y')
 
-# Fetch marker data
-def get_marker_data():
-    query = "SELECT management_id, Management_coords, Observer, Date FROM data_coralsol_management"
+# Fetch management data
+def get_management_data():
+    query = "SELECT management_id, Management_coords, Observer, Managed_mass_kg, Date FROM data_coralsol_management"
     df = pd.read_sql(query, conn)
     return df
 
@@ -79,7 +79,7 @@ start_date_str = format_date_to_ddmmyyyy(start_date)
 end_date_str = format_date_to_ddmmyyyy(end_date)
 
 # Checkbox options for markers and lines
-show_markers = st.sidebar.checkbox("Show Markers", value=True)
+show_management = st.sidebar.checkbox("Manejos", value=True)
 show_lines = st.sidebar.checkbox("Show Lines", value=True)
 
 # Initialize Folium map
@@ -88,10 +88,10 @@ m = folium.Map(location=[-27.281798, -48.366133], zoom_start=12, tiles="Esri.Wor
 
 Fullscreen().add_to(m)
 
-# Display markers if selected
-if show_markers:
-    # Fetch marker data
-    data = get_marker_data()
+# Display management  if selected
+if show_management:
+    # Fetch management data
+    data = get_management_data()
 
     # Ensure Date column is a string before parsing
     data['Date'] = data['Date'].astype(str)
@@ -115,7 +115,7 @@ if show_markers:
                 lat, lon = spot_coords[0]  # Extract latitude and longitude
                 folium.Marker(
                     [lat, lon],
-                    popup=f"Observer: {row['Observer']}, Date: {row['Date']}",
+                    popup=f"Observer: {row['Observer']}, Date: {row['Date']}, Mass(kg): {row['Managed_mass_kg']}",
                     tooltip=f"Management {row['management_id']}"
                 ).add_to(marker_cluster)
             else:
@@ -158,5 +158,5 @@ if show_lines:
 
 # Render the Folium map in Streamlit
 
-time.sleep(1)
+time.sleep(0.5)
 st_data = st_folium(m, width= '100%', height='1000')
