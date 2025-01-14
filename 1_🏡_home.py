@@ -1,5 +1,8 @@
 import streamlit as st
-st.logo('./assets/logo.png')
+st.logo('./assets/logo.png',
+         size="large")
+
+#icon_image()
 
 st.markdown(
     """

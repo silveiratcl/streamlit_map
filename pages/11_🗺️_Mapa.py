@@ -13,11 +13,12 @@ from folium.plugins import Fullscreen
 st.set_page_config(page_title="Map", 
                    page_icon="🗺️", 
                    layout = "wide")
+st.logo('./assets/logo_horiz.png',
+         size="large")
 
 
 
-
-# Initialize connection using SQLAlchemy and credentials from `secrets.toml`
+# --- Initialize connection using SQLAlchemy and credentials from `secrets.toml` ---
 def init_connection():
     try:
         # Debugging: Show the structure of st.secrets
@@ -49,19 +50,18 @@ conn = init_connection()
 def format_date_to_ddmmyyyy(date):
     return date.strftime('%d/%m/%Y')
 
+# --- Get Data from DB ---
 # Fetch management data
 def get_management_data():
     query = "SELECT management_id, Management_coords, Observer, Managed_mass_kg, Date FROM data_coralsol_management"
     df = pd.read_sql(query, conn)
     return df
 
-# Fetch line data
-def get_line_data():
+# Fetch locality data
+def get_locality_data():
     query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
     df = pd.read_sql(query, conn)
     return df
-
-
 
 
 # Sidebar for date input
@@ -78,9 +78,10 @@ else:
 start_date_str = format_date_to_ddmmyyyy(start_date)
 end_date_str = format_date_to_ddmmyyyy(end_date)
 
-# Checkbox options for markers and lines
+
+# Checkbox options to display data
 show_management = st.sidebar.checkbox("Manejos", value=True)
-show_lines = st.sidebar.checkbox("Show Lines", value=True)
+show_locality = st.sidebar.checkbox("Localidades", value=True)
 
 # Initialize Folium map
 m = folium.Map(location=[-27.281798, -48.366133], zoom_start=12, tiles="Esri.WorldImagery")
@@ -124,9 +125,9 @@ if show_management:
             st.error(f"Error adding marker for Management ID {row['management_id']}: {e}")
 
 # Display lines if selected
-if show_lines:
+if show_locality:
     # Fetch line data
-    data = get_line_data()
+    data = get_locality_data()
 
     # Ensure Date column is a string before parsing
     data['date'] = data['date'].astype(str)
@@ -137,26 +138,26 @@ if show_lines:
         (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
     ]
 
-    # Add lines from the filtered data
+    # Add locality from the filtered data
     for index, row in filtered_data.iterrows():
         try:
             # Parse the coords_local from string to a list of lists
             coords_str = row['coords_local']
-            line_coords = ast.literal_eval(coords_str)
+            locality_coords = ast.literal_eval(coords_str)
 
             # Check if the parsed coordinates are valid
-            if isinstance(line_coords, list) and len(line_coords) > 0:
+            if isinstance(locality_coords, list) and len(locality_coords) > 0:
                 folium.PolyLine(
-                    line_coords,
+                    locality_coords,
                     popup=f"Locality: {row['name']}, Date: {row['date']}",
                     tooltip=f"Locality {row['locality_id']}"
                 ).add_to(m)
             else:
-                st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {line_coords}")
+                st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {locality_coords}")
         except Exception as e:
             st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
 
 # Render the Folium map in Streamlit
 
 time.sleep(0.5)
-st_data = st_folium(m, width= '100%', height='1000')
+st_data = st_folium(m, width= '100%', height='100%')
