@@ -13,8 +13,9 @@ import requests
 import base64
 from PIL import Image
 from io import BytesIO
+import json #### testing
 
-st.set_page_config(page_title="Map", 
+st.set_page_config(page_title="Mapa", 
                    page_icon="🗺️", 
                    layout = "wide")
 st.logo('./assets/logo_horiz.png',
@@ -57,22 +58,26 @@ def format_date_to_ddmmyyyy(date):
 def get_management_data():
     query = "SELECT management_id, Management_coords, Observer, Managed_mass_kg, Date FROM data_coralsol_management"
     df = pd.read_sql(query, conn)
+    df.columns = map(str.lower, df.columns) # Ensure column names are lowercase
     return df
 
 # Fetch locality data
 def get_locality_data():
     query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
     df = pd.read_sql(query, conn)
+    df.columns = map(str.lower, df.columns) # Ensure column names are lowercase
     return df
 
 def get_occ_data():
    query = "SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo FROM data_coralsol_occurrence WHERE Superficie_photo IS NOT NULL LIMIT 10"
    df = pd.read_sql(query, conn)  # Use pd.read_sql to fetch data
+   df.columns = map(str.lower, df.columns)    # Ensure column names are lowercase
    return df
 
 def get_dafor_data():
    query = "SELECT Dafor_id, Locality_id,  Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method FROM data_coralsol_dafor"
-   df = pd.read_sql(query, conn)  # Use pd.read_sql to fetch data
+   df = pd.read_sql(query, conn) # Use pd.read_sql to fetch data
+   df.columns = map(str.lower, df.columns) # Ensure column names are lowercase
    return df
 
 #debug
@@ -123,12 +128,12 @@ if show_management:
     data = get_management_data()
 
     # Ensure Date column is a string before parsing
-    data['Date'] = data['Date'].astype(str)
+    data['date'] = data['date'].astype(str)
 
     # Manual date comparison to filter data
     filtered_data = data[
-        (pd.to_datetime(data['Date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-        (pd.to_datetime(data['Date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+        (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+        (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
     ]
 
     # Add markers from the filtered data
@@ -136,7 +141,7 @@ if show_management:
     for index, row in filtered_data.iterrows():
         try:
             # Parse the Management_coords from string to a list of lists
-            coords_str = row['Management_coords']
+            coords_str = row['management_coords']
             spot_coords = ast.literal_eval(coords_str)
 
             # Check if the parsed coordinates are valid
@@ -144,7 +149,7 @@ if show_management:
                 lat, lon = spot_coords[0]  # Extract latitude and longitude
                 folium.Marker(
                     [lat, lon],
-                    popup=f"Observer: {row['Observer']}, Date: {row['Date']}, Mass(kg): {row['Managed_mass_kg']}",
+                    popup=f"Observer: {row['observer']}, Date: {row['date']}, Mass(kg): {row['managed_mass_kg']}",
                     tooltip=f"Management {row['management_id']}"
                 ).add_to(marker_cluster)
             else:
@@ -195,123 +200,129 @@ if show_occ:
         st.warning("No occurrence data found matching the criteria.")
     else:
         # Ensure Date column is a string before parsing
-        data['Date'] = data['Date'].astype(str)
+        data['date'] = data['date'].astype(str)
 
         # Manual date comparison to filter data
         filtered_data = data[
-            (pd.to_datetime(data['Date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-            (pd.to_datetime(data['Date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+            (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+            (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
         ]
 
         # Add markers from the filtered data
         marker_cluster = MarkerCluster(disableClusteringAtZoom = 6).add_to(m)
         for index, row in filtered_data.iterrows():
             try:
-                coords_str = row['Spot_coords']
+                coords_str = row['spot_coords']
                 spot_coords = ast.literal_eval(coords_str)
 
                 if isinstance(spot_coords, list) and len(spot_coords) > 0:
                     lat, lon = spot_coords[0]
 
                     # Construct the photo URL
-                    occurrence_id = row['Occurrence_id']
-                    file_name = row['Superficie_photo']
+                    occurrence_id = row['occurrence_id']
+                    file_name = row['superficie_photo']
                     photo_url = f"{base_url}/Upload/UploadImageCoralSol/{occurrence_id}/{file_name}"
 
                     response = requests.get(photo_url)
                     if response.status_code == 200:
                         base64_image = response.text
                         popup_html = f"""
-                        <b>Date:</b> {row['Date']}<br>
-                        <b>Depth (m):</b> {row['Depth']}<br>
+                        <b>Date:</b> {row['date']}<br>
+                        <b>Depth (m):</b> {row['depth']}<br>
                         <b>Photo:</b><br>
                         <img src="data:image/png;base64,{base64_image}" width="300"/>
                         """
                     else:
                         popup_html = f"""
-                        <b>Date:</b> {row['Date']}<br>
-                        <b>Depth (m):</b> {row['Depth']}<br>
+                        <b>Date:</b> {row['date']}<br>
+                        <b>Depth (m):</b> {row['depth']}<br>
                         <b>Photo:</b> <i>Image not available (Error {response.status_code})</i>
                         """
 
                     folium.Marker(
                         [lat, lon],
                         popup=folium.Popup(popup_html, max_width=300),
-                        tooltip=f"Ocorrência {row['Occurrence_id']}"
+                        tooltip=f"Ocorrência {row['occurrence_id']}"
                     ).add_to(marker_cluster)
                 else:
-                    st.error(f"Invalid coordinates for Occurrence ID {row['Occurrence_id']}: {spot_coords}")
+                    st.error(f"Invalid coordinates for Occurrence ID {row['occurrence_id']}: {spot_coords}")
             except Exception as e:
-                st.error(f"Error adding marker for Occurrence ID {row['Occurrence_id']}: {e}")
-# # Display lines if selected
-# if show_dafor:
-#     # Fetch line data
-#     data = get_dafor_data()
+                st.error(f"Error adding marker for Occurrence ID {row['occurrence_id']}: {e}")
+# Display lines if selected
+if show_dafor:
+    # Fetch line data
+    data = get_dafor_data()
 
-#     # Ensure Date column is a string before parsing
-#     data['Date'] = data['Date'].astype(str)
+    # Ensure Date column is a string before parsing
+    data['date'] = data['date'].astype(str)
 
-#     # Manual date comparison to filter data
-#     filtered_data = data[
-#         (pd.to_datetime(data['Date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-#         (pd.to_datetime(data['Date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
-#     ]
+    # Manual date comparison to filter data
+    filtered_data = data[
+        (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+        (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+    ]
 
-#     # Add dafor from the filtered data
-#     for index, row in filtered_data.iterrows():
-#         try:
-#             # Parse the coords_local from string to a list of lists
-#             coords_str = row['Dafor_coords']
-#             dafor_coords = ast.literal_eval(coords_str)
+    # Add locality from the filtered data
+    for index, row in filtered_data.iterrows():
+        try:
+            # Parse the dafor_coords from string to a list of lists
+            coords_str = row['dafor_coords']
+            try:
+                dafor_coords = ast.literal_eval(coords_str)
+            except (ValueError, SyntaxError) as e:
+                st.error(f"Error parsing coordinates for Locality ID {row['locality_id']}: {e}")
+                continue
 
-#             # Check if the parsed coordinates are valid
-#             if isinstance(dafor_coords, list) and len(dafor_coords) > 0:
-#                 folium.PolyLine(
-#                     dafor_coords,
-#                     popup=f"Locality: {row['Locality_id']}, Date: {row['Date']}",
-#                     tooltip=f"Locality {row['Locality_id']}"
-#                 ).add_to(m)
-#             else:
-#                 st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {locality_coords}")
-#         except Exception as e:
-#             st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
+            # Check if the parsed coordinates are valid
+            if isinstance(dafor_coords, list) and len(dafor_coords) > 0:
+                folium.PolyLine(
+                    dafor_coords,
+                    popup=f"Locality: {row['locality_id']}, Date: {row['date']}",
+                    tooltip=f"Locality {row['locality_id']}"
+                ).add_to(m)
+            else:
+                st.error(f"Invalid coordinates for Locality ID {row['dafor_id']}: {dafor_coords}")
+        except Exception as e:
+            st.error(f"Error adding line for Locality ID {row['dafor_id']}: {e}")
+
+
 
 # Render the Folium map in Streamlit
 time.sleep(1)
 st_data = st_folium(m, width= '100%', height='600')
 
-########### Stoped here ###########
+########### DEBUG ###########
 # Fetch locality data
-def get_locality_data() -> pd.DataFrame:
-    query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
-    df = pd.read_sql(query, conn)
-    return df
+# def get_locality_data() -> pd.DataFrame:
+#     query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
+#     df = pd.read_sql(query, conn)
+#     return df
 
-# Fetch dafor data
-def get_dafor_data() -> pd.DataFrame:
-    query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method FROM data_coralsol_dafor"
-    df = pd.read_sql(query, conn)
-    return df
+# # Fetch dafor data
+# def get_dafor_data() -> pd.DataFrame:
+#     query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method FROM data_coralsol_dafor"
+#     df = pd.read_sql(query, conn)
+#     return df
 
-# Example usage
-data = get_dafor_data()
+# # Example usage
+# data = get_dafor_data()
 
-# Print the columns to check if 'locality_id' exists
-st.write("Columns in the DataFrame:", data.columns)
+# # Print the columns to check if 'locality_id' exists
+# st.write("Columns in the DataFrame:", data.columns)
 
-# Ensure Date column is a string before parsing
-data['Date'] = data['Date'].astype(str)
+# # Ensure Date column is a string before parsing
+# data['Date'] = data['Date'].astype(str)
 
-# Manual date comparison to filter data
-filtered_data = data[
-    (pd.to_datetime(data['Date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-    (pd.to_datetime(data['Date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
-]
+# # Manual date comparison to filter data
+# filtered_data = data[
+#     (pd.to_datetime(data['Date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+#     (pd.to_datetime(data['Date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+# ]
 
-# Add dafor from the filtered data
-for index, row in filtered_data.iterrows():
-    try:
-        # Your existing code to process each row
-        pass
-    except Exception as e:
-        st.error(f"Error adding line for Locality ID {row.get('locality_id', 'N/A')}: {e}")
+# # Add dafor from the filtered data
+# for index, row in filtered_data.iterrows():
+#     try:
+#         # Your existing code to process each row
+#         pass
+#     except Exception as e:
+#         st.error(f"Error adding line for Locality ID {row.get('locality_id', 'N/A')}: {e}")
