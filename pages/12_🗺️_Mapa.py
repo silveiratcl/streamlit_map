@@ -70,13 +70,15 @@ def get_occ_data():
    df = pd.read_sql(query, conn)  # Use pd.read_sql to fetch data
    return df
 
-# debug   
+def get_dafor_data():
+   query = "SELECT Dafor_id, Locality_id,  Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method FROM data_coralsol_dafor"
+   df = pd.read_sql(query, conn)  # Use pd.read_sql to fetch data
+   return df
 
-
+#debug
 
 # Base URL test DB
 base_url = "http://coralsol-api.kinghost.net/api"
-#Stoped here
 
 
 # -- Sidebar for date input
@@ -98,14 +100,17 @@ end_date_str = format_date_to_ddmmyyyy(end_date)
 show_management = st.sidebar.checkbox("Manejos", value= True)
 show_locality = st.sidebar.checkbox("Localidades", value= True)
 show_occ = st.sidebar.checkbox("Ocorrências", value = True)
+show_dafor = st.sidebar.checkbox("Monitoramento", value = True)
 
 # -- Initialize Folium map
-m = folium.Map(location=[-27.281798, -48.366133], 
-               zoom_start=13,
-               tiles="https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic2lsdmVpcmF0Y2wiLCJhIjoiY202MTRrN3N5MGt3MDJqb2xhc3R0empqZCJ9.YfjBqq5HbnacUNw9Tyiaew",
+m = folium.Map(location=[-27.281798, -48.366133],
+               width ="100%",
+               height = "100%", 
+               zoom_start = 13,
+               tiles = "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic2lsdmVpcmF0Y2wiLCJhIjoiY202MTRrN3N5MGt3MDJqb2xhc3R0empqZCJ9.YfjBqq5HbnacUNw9Tyiaew",
                attr="Mapbox attribution",
-               max_zoom= 20,
-               min_zoon= 1,
+               max_zoom = 20,
+               min_zoon = 1,
                #tiles="Esri.WorldImagery"
                )
 #-48.366133,-27.281798
@@ -127,7 +132,7 @@ if show_management:
     ]
 
     # Add markers from the filtered data
-    marker_cluster = MarkerCluster().add_to(m)
+    marker_cluster = MarkerCluster(disableClusteringAtZoom = 6).add_to(m)
     for index, row in filtered_data.iterrows():
         try:
             # Parse the Management_coords from string to a list of lists
@@ -199,7 +204,7 @@ if show_occ:
         ]
 
         # Add markers from the filtered data
-        marker_cluster = MarkerCluster().add_to(m)
+        marker_cluster = MarkerCluster(disableClusteringAtZoom = 6).add_to(m)
         for index, row in filtered_data.iterrows():
             try:
                 coords_str = row['Spot_coords']
@@ -238,8 +243,75 @@ if show_occ:
                     st.error(f"Invalid coordinates for Occurrence ID {row['Occurrence_id']}: {spot_coords}")
             except Exception as e:
                 st.error(f"Error adding marker for Occurrence ID {row['Occurrence_id']}: {e}")
+# # Display lines if selected
+# if show_dafor:
+#     # Fetch line data
+#     data = get_dafor_data()
 
+#     # Ensure Date column is a string before parsing
+#     data['Date'] = data['Date'].astype(str)
+
+#     # Manual date comparison to filter data
+#     filtered_data = data[
+#         (pd.to_datetime(data['Date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+#         (pd.to_datetime(data['Date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+#     ]
+
+#     # Add dafor from the filtered data
+#     for index, row in filtered_data.iterrows():
+#         try:
+#             # Parse the coords_local from string to a list of lists
+#             coords_str = row['Dafor_coords']
+#             dafor_coords = ast.literal_eval(coords_str)
+
+#             # Check if the parsed coordinates are valid
+#             if isinstance(dafor_coords, list) and len(dafor_coords) > 0:
+#                 folium.PolyLine(
+#                     dafor_coords,
+#                     popup=f"Locality: {row['Locality_id']}, Date: {row['Date']}",
+#                     tooltip=f"Locality {row['Locality_id']}"
+#                 ).add_to(m)
+#             else:
+#                 st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {locality_coords}")
+#         except Exception as e:
+#             st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
 
 # Render the Folium map in Streamlit
 time.sleep(1)
 st_data = st_folium(m, width= '100%', height='600')
+
+########### Stoped here ###########
+# Fetch locality data
+def get_locality_data() -> pd.DataFrame:
+    query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
+    df = pd.read_sql(query, conn)
+    return df
+
+# Fetch dafor data
+def get_dafor_data() -> pd.DataFrame:
+    query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method FROM data_coralsol_dafor"
+    df = pd.read_sql(query, conn)
+    return df
+
+# Example usage
+data = get_dafor_data()
+
+# Print the columns to check if 'locality_id' exists
+st.write("Columns in the DataFrame:", data.columns)
+
+# Ensure Date column is a string before parsing
+data['Date'] = data['Date'].astype(str)
+
+# Manual date comparison to filter data
+filtered_data = data[
+    (pd.to_datetime(data['Date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+    (pd.to_datetime(data['Date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+]
+
+# Add dafor from the filtered data
+for index, row in filtered_data.iterrows():
+    try:
+        # Your existing code to process each row
+        pass
+    except Exception as e:
+        st.error(f"Error adding line for Locality ID {row.get('locality_id', 'N/A')}: {e}")
