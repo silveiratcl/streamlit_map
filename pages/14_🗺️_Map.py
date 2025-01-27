@@ -316,15 +316,23 @@ if show_transects_suncoral:
         (pd.to_datetime(dafor_data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
     ]
 
+    # Debugging: Display filtered dafor data
+    st.write("Filtered Dafor Data")
+    st.dataframe(filtered_dafor_data)
+
     # Count the number of Dafor_value entries greater than 0 for each locality
     dafor_counts = filtered_dafor_data[filtered_dafor_data['dafor_value'] > 0].groupby('locality_id').size().reset_index(name='dafor_count')
+
+    # Debugging: Display dafor counts
+    st.write("Dafor Counts")
+    st.dataframe(dafor_counts)
 
     # Merge the counts with the locality data
     merged_data = filtered_locality_data.merge(dafor_counts, on='locality_id', how='left').fillna({'dafor_count': 0})
 
     # Display the table with dafor counts
     st.write("Dafor Counts by Locality")
-    st.dataframe(merged_data[['locality_id', 'dafor_count']])
+    st.dataframe(merged_data[['locality_id', 'name', 'dafor_count']])
 
     # Add locality from the merged data
     for index, row in merged_data.iterrows():
@@ -351,7 +359,7 @@ if show_transects_suncoral:
                 folium.PolyLine(
                     coords_local,
                     color=color,
-                    popup=f"Locality: {row['locality_id']}, Date: {row['date']}, Dafor Count: {dafor_count}",
+                    popup=f"Locality: {row['locality_id']}, Name: {row['name']}, Date: {row['date']}, Dafor Count: {dafor_count}",
                     tooltip=f"Locality {row['locality_id']}"
                 ).add_to(m)
             else:
