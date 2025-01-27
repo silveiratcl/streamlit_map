@@ -75,7 +75,7 @@ def get_occ_data():
    return df
 
 def get_dafor_data():
-   query = "SELECT Dafor_id, Locality_id,  Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method FROM data_coralsol_dafor"
+   query = "SELECT Dafor_id, Locality_id,  Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method, Dafor_value FROM data_coralsol_dafor"
    df = pd.read_sql(query, conn) # Use pd.read_sql to fetch data
    df.columns = map(str.lower, df.columns) # Ensure column names are lowercase
    return df
@@ -126,6 +126,8 @@ m = folium.Map(location=[-27.281798, -48.366133],
 #-48.366133,-27.281798
 
 Fullscreen().add_to(m)
+
+### Camadas ###
 
 # Display management  if selected
 if show_management:
@@ -289,6 +291,151 @@ if show_dafor:
                 st.error(f"Invalid coordinates for Locality ID {row['dafor_id']}: {dafor_coords}")
         except Exception as e:
             st.error(f"Error adding line for Locality ID {row['dafor_id']}: {e}")
+
+### Indicadores ###
+
+# if show_transects_suncoral:
+    
+#     # get locality data to get the locality lines
+#     # data = get_locality_data()
+
+#     # Ensure Date column is a string before parsing
+#     data['date'] = data['date'].astype(str)
+
+#     # Manual date comparison to filter data
+#     filtered_data = data[
+#         (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+#         (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+#     ]
+
+#     # Get dafor data:
+#     data = get_dafor_data()
+
+#     # Ensure Date column is a string before parsing
+#     data['date'] = data['date'].astype(str)
+
+#     # Manual date comparison to filter data
+#     filtered_data = data[
+#         (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+#         (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+#     ]
+
+#     # Add locality from the filtered data
+#     for index, row in filtered_data.iterrows():
+#         try:
+#             # Parse the dafor_coords from string to a list of lists
+#             coords_str = row['dafor_coords']
+#             try:
+#                 dafor_coords = ast.literal_eval(coords_str)
+#             except (ValueError, SyntaxError) as e:
+#                 st.error(f"Error parsing coordinates for Locality ID {row['locality_id']}: {e}")
+#                 continue
+
+#             # Check if the parsed coordinates are valid
+#             if isinstance(dafor_coords, list) and len(dafor_coords) > 0:
+#                 folium.PolyLine(
+#                     dafor_coords,
+#                     popup=f"Locality: {row['locality_id']}, Date: {row['date']}",
+#                     tooltip=f"Locality {row['locality_id']}"
+#                 ).add_to(m)
+#             else:
+#                 st.error(f"Invalid coordinates for Locality ID {row['dafor_id']}: {dafor_coords}")
+#         except Exception as e:
+#             st.error(f"Error adding line for Locality ID {row['dafor_id']}: {e}")
+
+
+
+
+#     # Add locality from the filtered data
+#     for index, row in filtered_data.iterrows():
+#         try:
+#             # Parse the coords_local from string to a list of lists
+#             coords_str = row['coords_local']
+#             locality_coords = ast.literal_eval(coords_str)
+
+#             # Check if the parsed coordinates are valid
+#             if isinstance(locality_coords, list) and len(locality_coords) > 0:
+#                 folium.PolyLine(
+#                     locality_coords,
+#                     popup=f"Locality: {row['name']}, Date: {row['date']}",
+#                     tooltip=f"Locality {row['locality_id']}"
+#                 ).add_to(m)
+#             else:
+#                 st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {locality_coords}")
+#         except Exception as e:
+#             st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
+
+if show_transects_suncoral:
+    # Get locality data to get the locality lines
+    locality_data = get_locality_data()
+
+    # Ensure Date column is a string before parsing
+    locality_data['date'] = locality_data['date'].astype(str)
+
+    # Manual date comparison to filter data
+    filtered_locality_data = locality_data[
+        (pd.to_datetime(locality_data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+        (pd.to_datetime(locality_data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+    ]
+
+    # Get dafor data
+    dafor_data = get_dafor_data()
+
+    # Ensure Date column is a string before parsing
+    dafor_data['date'] = dafor_data['date'].astype(str)
+
+    # Convert dafor_value to numeric
+    dafor_data['dafor_value'] = pd.to_numeric(dafor_data['dafor_value'], errors='coerce')
+
+    # Manual date comparison to filter data
+    filtered_dafor_data = dafor_data[
+        (pd.to_datetime(dafor_data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+        (pd.to_datetime(dafor_data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+    ]
+
+    # Count the number of Dafor_value entries greater than 0 for each locality
+    dafor_counts = filtered_dafor_data[filtered_dafor_data['dafor_value'] > 0].groupby('locality_id').size().reset_index(name='dafor_count')
+
+    # Merge the counts with the locality data
+    merged_data = filtered_locality_data.merge(dafor_counts, on='locality_id', how='left').fillna({'dafor_count': 0})
+
+    # Add locality from the merged data
+    for index, row in merged_data.iterrows():
+        try:
+            # Parse the coords_local from string to a list of lists
+            coords_str = row['coords_local']
+            try:
+                coords_local = ast.literal_eval(coords_str)
+            except (ValueError, SyntaxError) as e:
+                st.error(f"Error parsing coordinates for Locality ID {row['locality_id']}: {e}")
+                continue
+
+            # Check if the parsed coordinates are valid
+            if isinstance(coords_local, list) and len(coords_local) > 0:
+                # Determine the color based on the dafor_count
+                dafor_count = row['dafor_count']
+                if dafor_count > 10:
+                    color = 'red'
+                elif dafor_count > 5:
+                    color = 'orange'
+                else:
+                    color = 'green'
+
+                folium.PolyLine(
+                    coords_local,
+                    color=color,
+                    popup=f"Locality: {row['locality_id']}, Date: {row['date']}, Dafor Count: {dafor_count}",
+                    tooltip=f"Locality {row['locality_id']}"
+                ).add_to(m)
+            else:
+                st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {coords_local}")
+        except Exception as e:
+            st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
+
+
+
+
+
 
 
 
