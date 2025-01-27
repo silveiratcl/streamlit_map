@@ -307,8 +307,11 @@ if show_transects_suncoral:
     # Ensure Date column is a string before parsing
     dafor_data['date'] = dafor_data['date'].astype(str)
 
-    # Convert dafor_value to numeric
-    dafor_data['dafor_value'] = pd.to_numeric(dafor_data['dafor_value'], errors='coerce')
+    # Split and convert dafor_value to numeric
+    dafor_data['dafor_value'] = dafor_data['dafor_value'].apply(lambda x: [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')])
+
+    # Flatten the list of dafor_values
+    dafor_data = dafor_data.explode('dafor_value')
 
     # Manual date comparison to filter data
     filtered_dafor_data = dafor_data[
