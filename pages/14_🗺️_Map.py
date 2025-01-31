@@ -101,11 +101,11 @@ with st.sidebar.expander("Indicadores", expanded=True):
     show_transects_suncoral = st.checkbox("Transectos com Coral-sol", value=True)
 
 # -- Checkbox options to display data
-with st.sidebar.expander("Camadas", expanded=True):
-    show_management = st.checkbox("Manejos", value=True)
-    show_locality = st.checkbox("Localidades", value=True)
-    show_occ = st.checkbox("Ocorrências", value=True)
-    show_dafor = st.checkbox("Monitoramento", value=True)
+with st.sidebar.expander("Camadas", expanded=False):
+    show_management = st.checkbox("Manejos", value=False)
+    show_locality = st.checkbox("Localidades", value=False)
+    show_occ = st.checkbox("Ocorrências", value=False)
+    show_dafor = st.checkbox("Monitoramento", value=False)
 
 # -- Initialize Folium map
 m = folium.Map(location=[-27.281798, -48.366133],
