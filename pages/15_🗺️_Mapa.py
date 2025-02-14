@@ -53,6 +53,7 @@ def format_date_to_ddmmyyyy(date):
     return date.strftime('%d/%m/%Y')
 
 # --- Get Data from DB ---
+
 # Fetch management data
 @st.cache_data
 def get_management_data():
@@ -68,6 +69,7 @@ def get_locality_data():
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns) # Ensure column names are lowercase
     return df
+
 # Fetch occurrence data
 @st.cache_data
 def get_occ_data():
@@ -75,7 +77,6 @@ def get_occ_data():
    df = pd.read_sql(query, conn)  # Use pd.read_sql to fetch data
    df.columns = map(str.lower, df.columns)    # Ensure column names are lowercase
    return df
-
 # Fetch dafor data
 @st.cache_data
 def get_dafor_data():
@@ -113,23 +114,26 @@ with st.sidebar.expander("Camadas", expanded=False):
     show_dafor = st.checkbox("Monitoramento", value=False)
 
 # -- Initialize Folium map
-m = folium.Map(location=[-27.281798, -48.366133],
-               width ="100%",
-               height = "100%", 
-               zoom_start = 13,
-               tiles = "https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic2lsdmVpcmF0Y2wiLCJhIjoiY202MTRrN3N5MGt3MDJqb2xhc3R0empqZCJ9.YfjBqq5HbnacUNw9Tyiaew",
+if 'map_center' not in st.session_state:
+     st.session_state.map_center = [-27.281798, -48.366133]
+if 'map_zoom' not in st.session_state:
+     st.session_state.map_zoom = 13
+
+m = folium.Map(location=st.session_state.map_center,
+               zoom_start=st.session_state.map_zoom,
+               #tiles="https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic2lsdmVpcmF0Y2wiLCJhIjoiY202MTRrN3N5MGt3MDJqb2xhc3R0empqZCJ9.YfjBqq5HbnacUNw9Tyiaew",
+               tiles="Esri.WorldImagery",
                attr="Mapbox attribution",
-               max_zoom = 20,
-               min_zoon = 1,
-               #tiles="Esri.WorldImagery"
-               )
-#-48.366133,-27.281798
+               max_zoom=20,
+               min_zoom=1,
+               width="100%",
+               height="100%")
 
 Fullscreen().add_to(m)
 
 ### Camadas ###
 
-# Display management  if selected
+# Display management if selected
 if show_management:
     # Fetch management data
     data = get_management_data()
@@ -144,7 +148,7 @@ if show_management:
     ]
 
     # Add markers from the filtered data
-    marker_cluster = MarkerCluster(disableClusteringAtZoom = 6).add_to(m)
+    marker_cluster = MarkerCluster(disableClusteringAtZoom=6).add_to(m)
     for index, row in filtered_data.iterrows():
         try:
             # Parse the Management_coords from string to a list of lists
@@ -214,7 +218,7 @@ if show_occ:
         ]
 
         # Add markers from the filtered data
-        marker_cluster = MarkerCluster(disableClusteringAtZoom = 6).add_to(m)
+        marker_cluster = MarkerCluster(disableClusteringAtZoom=6).add_to(m)
         for index, row in filtered_data.iterrows():
             try:
                 coords_str = row['spot_coords']
@@ -376,5 +380,9 @@ if show_transects_suncoral:
             st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
 
 # Render the Folium map in Streamlit
-time.sleep(1)
-st_data = st_folium(m, width= '100%', height='600')
+st_data = st_folium(m, width='100%', height='600')
+
+# Save the map's state
+#if st_data and 'center' in st_data and 'zoom' in st_data:
+ #   st.session_state.map_center = [st_data['center']['lat'], st_data['center']['lng']]
+  #  st.session_state.map_zoom = st_data['zoom']
