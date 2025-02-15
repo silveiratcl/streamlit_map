@@ -9,7 +9,7 @@ from folium.plugins import MarkerCluster, Fullscreen
 import requests
 
 # --- Page Configuration ---
-st.set_page_config(page_title="Mapa", page_icon="🗺️", layout="wide")
+st.set_page_config(page_title="Mapa_17", page_icon="🗺️", layout="wide")
 st.logo('./assets/logo_horiz.png', size="large")
 
 # --- Initialize Connection ---
@@ -332,7 +332,7 @@ def render_map(start_date, end_date, show_transects_suncoral, show_management, s
     if rerun_needed:
         st.session_state.map_updated = False  # Reset update flag
         st.rerun()  # 🔥 Force rerun only when needed
-        
+
 # --- Main App Logic ---
 def main():
     start_date, end_date, show_transects_suncoral, show_management, show_locality, show_occ, show_dafor = render_sidebar()
