@@ -2,7 +2,7 @@ import streamlit as st
 from sqlalchemy import create_engine
 import pandas as pd
 import folium
-from streamlit_folium import st_folium
+from streamlit_folium import folium_static
 import ast
 import datetime
 from folium.plugins import MarkerCluster, Fullscreen
@@ -90,38 +90,43 @@ def render_sidebar():
     return start_date, end_date, show_transects_suncoral, show_management, show_locality, show_occ, show_dafor
 
 # --- Map Rendering ---
-@st.fragment
+def create_map():
+    if 'map' not in st.session_state or st.session_state.map is None:
+        # Initialize the map
+        m = folium.Map(
+            location=[-27.281798, -48.366133],  # Default center
+            zoom_start=13,  # Default zoom
+            tiles="https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic2lsdmVpcmF0Y2wiLCJhIjoiY202MTRrN3N5MGt3MDJqb2xhc3R0empqZCJ9.YfjBqq5HbnacUNw9Tyiaew",
+            attr="Mapbox attribution",
+            max_zoom=20,
+            min_zoom=1
+        )
+        
+        Fullscreen().add_to(m)
+        st.session_state.map = m
+        st.session_state.layers = {}  # Initialize the layers dictionary
+        
+    return st.session_state.map
+
 def render_map(start_date, end_date, show_transects_suncoral, show_management, show_locality, show_occ, show_dafor):
-    # Initialize session state for map center and zoom
-    if 'map_center' not in st.session_state:
-        st.session_state.map_center = [-27.281798, -48.366133]  # Default center
-    if 'map_zoom' not in st.session_state:
-        st.session_state.map_zoom = 13  # Default zoom
-
-    # Initialize the Folium map with the current session state
-    m = folium.Map(
-        location=st.session_state.map_center,
-        zoom_start=st.session_state.map_zoom,
-        tiles="https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=pk.eyJ1Ijoic2lsdmVpcmF0Y2wiLCJhIjoiY202MTRrN3N5MGt3MDJqb2xhc3R0empqZCJ9.YfjBqq5HbnacUNw9Tyiaew",
-        attr="Mapbox attribution",
-        max_zoom=20,
-        min_zoom=1
-    )
-    Fullscreen().add_to(m)
-
-    # Convert dates to DD/MM/YYYY for comparison
     start_date_str = start_date.strftime('%d/%m/%Y')
     end_date_str = end_date.strftime('%d/%m/%Y')
+    m = create_map()  # Get or create the map
 
-    # Display management if selected
+    # Add your layers and markers here (same as before)
+    # Example: Add management markers
     if show_management:
+        if 'Manejos' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Manejos']._name, None)
+        layer = MarkerCluster().add_to(m)
+        st.session_state.layers['Manejos'] = layer
+
         data = get_management_data()
-        data['date'] = data['date'].astype(str)
+        data['date'] = pd.to_datetime(data['date'], format='%d/%m/%Y')  # Convert to datetime
         filtered_data = data[
-            (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-            (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+            (data['date'] >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+            (data['date'] <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
         ]
-        marker_cluster = MarkerCluster(disableClusteringAtZoom=10).add_to(m)
         for index, row in filtered_data.iterrows():
             try:
                 coords_str = row['management_coords']
@@ -132,17 +137,26 @@ def render_map(start_date, end_date, show_transects_suncoral, show_management, s
                         [lat, lon],
                         popup=f"Observer: {row['observer']}, Date: {row['date']}, Mass(kg): {row['managed_mass_kg']}",
                         tooltip=f"Management {row['management_id']}"
-                    ).add_to(marker_cluster)
+                    ).add_to(layer)
             except Exception as e:
                 st.error(f"Error adding marker for Management ID {row['management_id']}: {e}")
+    else:
+        if 'Manejos' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Manejos']._name, None)
+            del st.session_state.layers['Manejos']
 
     # Display locality if selected
     if show_locality:
+        if 'Localidades' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Localidades']._name, None)
+        layer = folium.FeatureGroup(name="Localidades").add_to(m)
+        st.session_state.layers['Localidades'] = layer
+
         data = get_locality_data()
-        data['date'] = data['date'].astype(str)
+        data['date'] = pd.to_datetime(data['date'], format='%d/%m/%Y')  # Convert to datetime
         filtered_data = data[
-            (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-            (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+            (data['date'] >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+            (data['date'] <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
         ]
         for index, row in filtered_data.iterrows():
             try:
@@ -153,25 +167,33 @@ def render_map(start_date, end_date, show_transects_suncoral, show_management, s
                         locality_coords,
                         popup=f"Locality: {row['name']}, Date: {row['date']}",
                         tooltip=f"Locality {row['locality_id']}"
-                    ).add_to(m)
+                    ).add_to(layer)
                 else:
                     st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {locality_coords}")
             except Exception as e:
                 st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
+    else:
+        if 'Localidades' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Localidades']._name, None)
+            del st.session_state.layers['Localidades']
 
     # Display occurrences if selected
     if show_occ:
+        if 'Ocorrências' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Ocorrências']._name, None)
+        layer = folium.FeatureGroup(name="Ocorrências").add_to(m)
+        st.session_state.layers['Ocorrências'] = layer
+
         data = get_occ_data()
         if data is None or data.empty:
             st.warning("No occurrence data found matching the criteria.")
         else:
-            data['date'] = data['date'].astype(str)
+            data['date'] = pd.to_datetime(data['date'], format='%d/%m/%Y')  # Convert to datetime
             filtered_data = data[
-                (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-                (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+                (data['date'] >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+                (data['date'] <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
             ]
-            occurrence_layer = folium.FeatureGroup(name="Ocorrências").add_to(m)
-            marker_cluster = MarkerCluster(disableClusteringAtZoom=5).add_to(occurrence_layer)
+            marker_cluster = MarkerCluster(disableClusteringAtZoom=5).add_to(layer)
             for index, row in filtered_data.iterrows():
                 try:
                     coords_str = row['spot_coords']
@@ -203,16 +225,24 @@ def render_map(start_date, end_date, show_transects_suncoral, show_management, s
                         ).add_to(marker_cluster)
                 except Exception as e:
                     st.error(f"Error adding marker for Occurrence ID {row['occurrence_id']}: {e}")
+    else:
+        if 'Ocorrências' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Ocorrências']._name, None)
+            del st.session_state.layers['Ocorrências']
 
     # Display dafor if selected
     if show_dafor:
+        if 'Monitoramento' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Monitoramento']._name, None)
+        layer = folium.FeatureGroup(name="Monitoramento").add_to(m)
+        st.session_state.layers['Monitoramento'] = layer
+
         data = get_dafor_data()
-        data['date'] = data['date'].astype(str)
+        data['date'] = pd.to_datetime(data['date'], format='%d/%m/%Y')  # Convert to datetime
         filtered_data = data[
-            (pd.to_datetime(data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-            (pd.to_datetime(data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+            (data['date'] >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+            (data['date'] <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
         ]
-        dafor_layer = folium.FeatureGroup(name="Monitoramento").add_to(m)
         for index, row in filtered_data.iterrows():
             try:
                 coords_str = row['dafor_coords']
@@ -222,48 +252,42 @@ def render_map(start_date, end_date, show_transects_suncoral, show_management, s
                         dafor_coords,
                         popup=f"Locality: {row['locality_id']}, Date: {row['date']}",
                         tooltip=f"Locality {row['locality_id']}"
-                    ).add_to(dafor_layer)
+                    ).add_to(layer)
             except Exception as e:
                 st.error(f"Error adding line for Locality ID {row['dafor_id']}: {e}")
-
-    # Render the Folium map in Streamlit
-    st_data = st_folium(
-        m,
-        width='100%',
-        height=600,
-        returned_objects=["center", "zoom"]
-    )
-
-    # Update session state with the new map center and zoom
-    if st_data and 'center' in st_data and 'zoom' in st_data:
-        st.session_state.map_center = [st_data['center']['lat'], st_data['center']['lng']]
-        st.session_state.map_zoom = st_data['zoom']
+    else:
+        if 'Monitoramento' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Monitoramento']._name, None)
+            del st.session_state.layers['Monitoramento']
 
     ### Indicadores ###
-    
     if show_transects_suncoral:
+        if 'Transectos com Coral-sol' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Transectos com Coral-sol']._name, None)
+        layer = folium.FeatureGroup(name="Transectos com Coral-sol").add_to(m)
+        st.session_state.layers['Transectos com Coral-sol'] = layer
+    
+        st.write("Debug: Transectos com Coral-sol checkbox is checked.")
         locality_data = get_locality_data()
-        locality_data['date'] = locality_data['date'].astype(str)
+        locality_data['date'] = pd.to_datetime(locality_data['date'], format='%d/%m/%Y')  # Convert to datetime
         filtered_locality_data = locality_data[
-            (pd.to_datetime(locality_data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-            (pd.to_datetime(locality_data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+            (locality_data['date'] >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+            (locality_data['date'] <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
         ]
+        st.write("Debug: Filtered locality data", filtered_locality_data)
         dafor_data = get_dafor_data()
-        dafor_data['date'] = dafor_data['date'].astype(str)
+        dafor_data['date'] = pd.to_datetime(dafor_data['date'], format='%d/%m/%Y')  # Convert to datetime
         dafor_data['dafor_value'] = dafor_data['dafor_value'].apply(lambda x: [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')])
         dafor_data = dafor_data.explode('dafor_value')
         filtered_dafor_data = dafor_data[
-            (pd.to_datetime(dafor_data['date'], format='%d/%m/%Y') >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
-            (pd.to_datetime(dafor_data['date'], format='%d/%m/%Y') <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
+            (dafor_data['date'] >= pd.to_datetime(start_date_str, format='%d/%m/%Y')) &
+            (dafor_data['date'] <= pd.to_datetime(end_date_str, format='%d/%m/%Y'))
         ]
-        #st.write("Filtered Dafor Data")
-        #st.dataframe(filtered_dafor_data)
+        st.write("Debug: Filtered Dafor data", filtered_dafor_data)
         dafor_counts = filtered_dafor_data[filtered_dafor_data['dafor_value'] > 0].groupby('locality_id').size().reset_index(name='dafor_count')
-        #st.write("Dafor Counts")
-        #st.dataframe(dafor_counts)
+        st.write("Debug: Dafor counts", dafor_counts)
         merged_data = filtered_locality_data.merge(dafor_counts, on='locality_id', how='left').fillna({'dafor_count': 0})
-        #st.write("Dafor Counts by Locality")
-        #st.dataframe(merged_data[['locality_id', 'name', 'dafor_count']])
+        st.write("Debug: Merged data", merged_data)
         for index, row in merged_data.iterrows():
             try:
                 coords_str = row['coords_local']
@@ -290,11 +314,18 @@ def render_map(start_date, end_date, show_transects_suncoral, show_management, s
                             f"Dafor Count: {dafor_count}"
                         ),
                         tooltip=f"Locality {row['locality_id']}"
-                    ).add_to(m)
+                    ).add_to(layer)
                 else:
                     st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {coords_local}")
             except Exception as e:
                 st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
+    else:
+        if 'Transectos com Coral-sol' in st.session_state.layers:
+            m._children.pop(st.session_state.layers['Transectos com Coral-sol']._name, None)
+            del st.session_state.layers['Transectos com Coral-sol']
+
+    # Render the Folium map in Streamlit
+    folium_static(m, width=1000, height=600)
 
 # --- Main App Logic ---
 def main():
