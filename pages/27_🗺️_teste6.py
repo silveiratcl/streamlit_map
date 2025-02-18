@@ -358,7 +358,7 @@ def main():
     st_data = st_folium(
         m,
         width="100%",
-        height=600,
+        height= 700,
         returned_objects=["center", "zoom"],
         key=st.session_state["map_key"],  # 🔥 Forces reloading when changed
     )
