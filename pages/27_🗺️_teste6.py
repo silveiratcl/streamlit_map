@@ -7,6 +7,7 @@ import ast
 import datetime
 from folium.plugins import MarkerCluster, Fullscreen
 import requests
+from branca.element import Template, MacroElement
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Mapa", page_icon="🗺️", layout="wide")
@@ -103,32 +104,56 @@ def get_map():
 
     return m
 
+from branca.element import Template, MacroElement
+
 # --- Update Layers Without Resetting Map ---
 def render_map(m, start_date, end_date, show_management, show_locality, show_occ, show_dafor, show_transects_suncoral):
     start_date_str = start_date.strftime('%Y-%m-%d')
     end_date_str = end_date.strftime('%Y-%m-%d')
-
+    
     # --- Indicadores ---
     if show_transects_suncoral:
-       
         layer = folium.FeatureGroup(name="Transectos com Coral-sol").add_to(m)
-       
-        st.write("Debug: Transectos com Coral-sol checkbox is checked.")
+
+        #st.write("Debug: Transectos com Coral-sol checkbox is checked.")
         locality_data = get_locality_data()
-        locality_data['date'] = pd.to_datetime(locality_data['date']).dt.strftime('%Y-%m-%d')
-        filtered_locality_data = locality_data[(locality_data['date'] >= start_date_str) & (locality_data['date'] <= end_date_str)]
-        st.write("Debug: Filtered locality data", filtered_locality_data)
-        
+        locality_data['date'] = pd.to_datetime(locality_data['date'], errors='coerce', dayfirst=True)
+
+        filtered_locality_data = locality_data[
+            (locality_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
+            (locality_data['date'] <= pd.to_datetime(end_date_str, errors='coerce'))
+        ]
+        #st.write("Debug: Filtered locality data", filtered_locality_data)
+
         dafor_data = get_dafor_data()
-        dafor_data['date'] = pd.to_datetime(dafor_data['date']).dt.strftime('%Y-%m-%d')
-        
-        filtered_dafor_data = dafor_data[(dafor_data['date'] >= start_date_str) & (dafor_data['date'] <= end_date_str)]
-        st.write("Debug: Filtered Dafor data", filtered_dafor_data)
-        
+        dafor_data['date'] = pd.to_datetime(dafor_data['date'], errors='coerce', dayfirst=True)
+
+        # ✅ Convert `dafor_value` to a list of numbers, handling errors
+        dafor_data['dafor_value'] = dafor_data['dafor_value'].apply(lambda x: 
+            [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
+        )
+
+        dafor_data = dafor_data.explode('dafor_value')
+
+        # ✅ Convert `dafor_value` column again to numeric
+        dafor_data['dafor_value'] = pd.to_numeric(dafor_data['dafor_value'], errors='coerce')
+
+        # ✅ Filter out NaN values after conversion
+        filtered_dafor_data = dafor_data[
+            (dafor_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
+            (dafor_data['date'] <= pd.to_datetime(end_date_str, errors='coerce')) &
+            (dafor_data['dafor_value'].notna())  # Remove NaNs
+        ]
+
+        #st.write("Debug: Filtered Dafor data", filtered_dafor_data)
+
+        # ✅ Now comparisons will work correctly
         dafor_counts = filtered_dafor_data[filtered_dafor_data['dafor_value'] > 0].groupby('locality_id').size().reset_index(name='dafor_count')
-        st.write("Debug: Dafor counts", dafor_counts)
+        #st.write("Debug: Dafor counts", dafor_counts)
+
         merged_data = filtered_locality_data.merge(dafor_counts, on='locality_id', how='left').fillna({'dafor_count': 0})
-        st.write("Debug: Merged data", merged_data)
+        #st.write("Debug: Merged data", merged_data)
+
         for _, row in merged_data.iterrows():
             try:
                 coords_str = row['coords_local']
@@ -137,6 +162,7 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                 except (ValueError, SyntaxError) as e:
                     st.error(f"Error parsing coordinates for Locality ID {row['locality_id']}: {e}")
                     continue
+
                 if isinstance(coords_local, list) and len(coords_local) > 0:
                     dafor_count = row['dafor_count']
                     if dafor_count > 10:
@@ -145,6 +171,7 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                         color = 'orange'
                     else:
                         color = 'green'
+
                     folium.PolyLine(
                         coords_local,
                         color=color,
@@ -160,84 +187,11 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                     st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {coords_local}")
             except Exception as e:
                 st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
-    
-
-    #chargpt solution
-# if show_transects_suncoral:
-       
-#     layer = folium.FeatureGroup(name="Transectos com Coral-sol").add_to(m)
-   
-#     st.write("Debug: Transectos com Coral-sol checkbox is checked.")
-#     locality_data = get_locality_data()
-#     locality_data['date'] = pd.to_datetime(locality_data['date']).dt.strftime('%Y-%m-%d')
-#     filtered_locality_data = locality_data[(locality_data['date'] >= start_date_str) & (locality_data['date'] <= end_date_str)]
-#     st.write("Debug: Filtered locality data", filtered_locality_data)
-    
-#     dafor_data = get_dafor_data()
-#     dafor_data['date'] = pd.to_datetime(dafor_data['date']).dt.strftime('%Y-%m-%d')
-    
-#     # ✅ Convert 'dafor_value' to numeric, handling non-numeric values
-#     dafor_data['dafor_value'] = pd.to_numeric(dafor_data['dafor_value'], errors='coerce')
-
-#     # ✅ Ensure we filter out NaN values after conversion
-#     filtered_dafor_data = dafor_data[
-#         (dafor_data['date'] >= start_date_str) & 
-#         (dafor_data['date'] <= end_date_str) & 
-#         (dafor_data['dafor_value'].notna())  # Exclude NaN values
-#     ]
-
-#     st.write("Debug: Filtered Dafor data", filtered_dafor_data)
-    
-#     # ✅ Now, numeric comparisons are valid
-#     dafor_counts = filtered_dafor_data[filtered_dafor_data['dafor_value'] > 0].groupby('locality_id').size().reset_index(name='dafor_count')
-#     st.write("Debug: Dafor counts", dafor_counts)
-    
-#     merged_data = filtered_locality_data.merge(dafor_counts, on='locality_id', how='left').fillna({'dafor_count': 0})
-#     st.write("Debug: Merged data", merged_data)
-    
-#     for _, row in merged_data.iterrows():
-#         try:
-#             coords_str = row['coords_local']
-#             try:
-#                 coords_local = ast.literal_eval(coords_str)
-#             except (ValueError, SyntaxError) as e:
-#                 st.error(f"Error parsing coordinates for Locality ID {row['locality_id']}: {e}")
-#                 continue
             
-#             if isinstance(coords_local, list) and len(coords_local) > 0:
-#                 dafor_count = row['dafor_count']
-#                 if dafor_count > 10:
-#                     color = 'red'
-#                 elif dafor_count > 5:
-#                     color = 'orange'
-#                 else:
-#                     color = 'green'
-                    
-#                 folium.PolyLine(
-#                     coords_local,
-#                     color=color,
-#                     popup=(
-#                         f"Locality: {row['locality_id']}<br>"
-#                         f"Name: {row['name']}<br>"
-#                         f"Date: {row['date']}<br>"
-#                         f"Dafor Count: {dafor_count}"
-#                     ),
-#                     tooltip=f"Locality {row['locality_id']}"
-#                 ).add_to(layer)
-#             else:
-#                 st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {coords_local}")
-#         except Exception as e:
-#             st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
-
-
-
-
-
-
     # --- Camadas ---
     if show_management:
         data = get_management_data()
-        data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d')
+        data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d', dayfirst=True)
         filtered_data = data[(data['date'] >= start_date_str) & (data['date'] <= end_date_str)]
 
         marker_cluster = MarkerCluster().add_to(m)
@@ -334,7 +288,7 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                     ).add_to(layer)
             except Exception as e:
                 st.error(f"Error adding line for Locality ID {row['dafor_id']}: {e}")
-
+    
     return m
 # --- Main Logic ---
 def main():
@@ -364,8 +318,8 @@ def main():
     )
 
     # Debugging info
-    st.write(f"Debug: Before update -> Zoom: {prev_zoom}, Center: {prev_center}")
-    st.write(f"Debug: st_folium returned -> {st_data}")
+    #st.write(f"Debug: Before update -> Zoom: {prev_zoom}, Center: {prev_center}")
+    #st.write(f"Debug: st_folium returned -> {st_data}")
 
     # Only store zoom & center TEMPORARILY
     if st_data:
