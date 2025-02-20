@@ -10,7 +10,7 @@ import requests
 from branca.element import Template, MacroElement
 
 # --- Page Configuration ---
-st.set_page_config(page_title="Mapa", page_icon="🗺️", layout="wide")
+st.set_page_config(page_title="Camadas", page_icon="🗺️", layout="wide")
 st.logo('./assets/logo_horiz.png', size="large")
 
 # --- Initialize Connection ---
@@ -111,11 +111,12 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
     start_date_str = start_date.strftime('%Y-%m-%d')
     end_date_str = end_date.strftime('%Y-%m-%d')
     
-    # --- Indicadores ---
+   
     if show_transects_suncoral:
         layer = folium.FeatureGroup(name="Transectos com Coral-sol").add_to(m)
 
-        #st.write("Debug: Transectos com Coral-sol checkbox is checked.")
+        st.write("Debug: Transectos com Coral-sol checkbox is checked.")
+        
         locality_data = get_locality_data()
         locality_data['date'] = pd.to_datetime(locality_data['date'], errors='coerce', dayfirst=True)
 
@@ -123,7 +124,7 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
             (locality_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
             (locality_data['date'] <= pd.to_datetime(end_date_str, errors='coerce'))
         ]
-        #st.write("Debug: Filtered locality data", filtered_locality_data)
+        st.write("Debug: Filtered locality data", filtered_locality_data)
 
         dafor_data = get_dafor_data()
         dafor_data['date'] = pd.to_datetime(dafor_data['date'], errors='coerce', dayfirst=True)
@@ -145,14 +146,14 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
             (dafor_data['dafor_value'].notna())  # Remove NaNs
         ]
 
-        #st.write("Debug: Filtered Dafor data", filtered_dafor_data)
+        st.write("Debug: Filtered Dafor data", filtered_dafor_data)
 
-        # ✅ Now comparisons will work correctly
         dafor_counts = filtered_dafor_data[filtered_dafor_data['dafor_value'] > 0].groupby('locality_id').size().reset_index(name='dafor_count')
-        #st.write("Debug: Dafor counts", dafor_counts)
+        st.write("Debug: Dafor counts", dafor_counts)
 
+        # Merge filtered_locality_data with dafor_counts to include 'name' and other locality data
         merged_data = filtered_locality_data.merge(dafor_counts, on='locality_id', how='left').fillna({'dafor_count': 0})
-        #st.write("Debug: Merged data", merged_data)
+        st.write("Debug: Merged data", merged_data)
 
         for _, row in merged_data.iterrows():
             try:
@@ -176,10 +177,10 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                         coords_local,
                         color=color,
                         popup=(
-                            f"Locality: {row['locality_id']}<br>"
-                            f"Name: {row['name']}<br>"
-                            f"Date: {row['date']}<br>"
-                            f"Dafor Count: {dafor_count}"
+                            f"<b>Locality:</b> {row['locality_id']}<br>"
+                            f"<b>Name:</b> {row['name']}<br>"
+                            f"<b>Date:</b> {row['date']}<br>"
+                            f"<b>Dafor Count:</b> {dafor_count}"
                         ),
                         tooltip=f"Locality {row['locality_id']}"
                     ).add_to(layer)
@@ -187,11 +188,11 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                     st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {coords_local}")
             except Exception as e:
                 st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
-            
+
     # --- Camadas ---
     if show_management:
         data = get_management_data()
-        data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d', dayfirst=True)
+        data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d')
         filtered_data = data[(data['date'] >= start_date_str) & (data['date'] <= end_date_str)]
 
         marker_cluster = MarkerCluster().add_to(m)
@@ -338,6 +339,8 @@ def main():
             st.session_state.map_center = st.session_state.temp_map_center
             st.session_state["map_key"] += 1  # 🔥 Forces full re-render
             st.write(f"Debug: Applied map updates, new key = {st.session_state['map_key']}")
+    
+            
 
 if __name__ == "__main__":
     main()

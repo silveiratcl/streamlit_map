@@ -1,6 +1,7 @@
 import streamlit as st
 
-st.set_page_config(page_title="Docs", page_icon="📃")
+st.set_page_config(page_title="Sobre", page_icon="📃")
+st.logo('./assets/logo_horiz.png', size="large")
 
 st.markdown(
 
