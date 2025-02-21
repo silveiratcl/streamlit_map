@@ -267,11 +267,11 @@ def main():
         st.session_state.temp_map_center = st.session_state.map_center
 
     # Create two columns
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([2, 1], gap="medium")
 
     with col1:
         # Display the map but DO NOT update zoom yet
-        st.write("## Indicadores do Monitoramento")
+        st.write("### Indicadores do Monitoramento")
         st_data = st_folium(
             m,
             width="100%",
@@ -310,17 +310,17 @@ def main():
             sorted_merged_data.index.name = 'id'
 
             # Display the sorted table
-            st.write("## Número de Transectos com Coral-sol")
+            st.write("### Número de Transectos com Coral-sol")
             st.dataframe(sorted_merged_data)
 
         if show_effort:
             # Sort merged_data_effort by dafor_count in descending order and select 'name' and 'dafor_count' columns
-            sorted_merged_data_effort = merged_data_effort[['name', 'dafor_count']].sort_values(by='dafor_count', ascending=False).rename(columns={'name': 'Localidade', 'dafor_count': 'Esforço(minutos)'})
+            sorted_merged_data_effort = merged_data_effort[['name', 'dafor_count']].sort_values(by='dafor_count', ascending=False).rename(columns={'name': 'Localidade', 'dafor_count': 'Esforço (minutos)'})
             # Add 'id' column name
             sorted_merged_data_effort.index.name = 'id'
 
             # Display the sorted table
-            st.write("## Esforço de Monitoramento")
+            st.write("### Esforço de Monitoramento")
             st.dataframe(sorted_merged_data_effort)
 
 if __name__ == "__main__":

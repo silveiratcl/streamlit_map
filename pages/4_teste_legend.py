@@ -69,15 +69,38 @@ def render_sidebar():
         start_date = st.date_input('Data Inicial', datetime.date(2012, 1, 1))
         end_date = st.date_input('Data Final', datetime.date.today() + datetime.timedelta(days=1))
 
-        # with st.expander("Indicadores", expanded=True):
-        #     show_transects_suncoral = st.checkbox("Transectos com Coral-sol", value=True)
-        #     show_effort = st.checkbox("Esforço de Monitoramento", value=True)
-
-        with st.radio("Indicadores", ["Transectos com Coral-sol", "Esforço de Monitoramento"]):
-            show_transects_suncoral = st.radio("Transectos com Coral-sol", ["Sim", "Não"]) == "Sim"
-            show_effort = st.radio("Esforço de Monitoramento", ["Sim", "Não"]) == "Sim"
+        indicator = st.radio("Indicadores", ["Transectos com Coral-sol", "Esforço de Monitoramento"])
+        show_transects_suncoral = indicator == "Transectos com Coral-sol"
+        show_effort = indicator == "Esforço de Monitoramento"
 
     return start_date, end_date, show_transects_suncoral, show_effort
+
+# --- Legend Template ---
+
+# Create the legend template as an HTML element
+legend_template = """
+{% macro html(this, kwargs) %}
+<div id='maplegend' class='maplegend' 
+    style='position: absolute; z-index: 9999; background-color: rgba(255, 255, 255, 0.5);
+     border-radius: 6px; padding: 10px; font-size: 10.5px; right: 20px; top: 20px;'>     
+<div class='legend-scale'>
+  <ul class='legend-labels'>
+    <li><span style='background: green; opacity: 0.75;'></span>Wind speed <= 55.21</li>
+    <li><span style='background: yellow; opacity: 0.75;'></span>55.65 <= Wind speed <= 64.29</li>
+    <li><span style='background: orange; opacity: 0.75;'></span>64.50 <= Wind speed <= 75.76</li>
+    <li><span style='background: red; opacity: 0.75;'></span>75.90 <= Wind speed <= 90.56</li>
+    <li><span style='background: purple; opacity: 0.75;'></span>Wind speed >= 91.07</li>
+  </ul>
+</div>
+</div> 
+<style type='text/css'>
+  .maplegend .legend-scale ul {margin: 0; padding: 0; color: #0f0f0f;}
+  .maplegend .legend-scale ul li {list-style: none; line-height: 18px; margin-bottom: 1.5px;}
+  .maplegend ul.legend-labels li span {float: left; height: 16px; width: 16px; margin-right: 4.5px;}
+</style>
+{% endmacro %}
+"""
+
 
 # --- Persist Map State ---
 def get_map():
@@ -178,6 +201,11 @@ def render_map(m, start_date, end_date, show_transects_suncoral, show_effort):
                     st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {coords_local}")
             except Exception as e:
                 st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
+        # Add the legend to the map
+            macro = MacroElement()
+            macro._template = Template(legend_template)
+            m.get_root().add_child(macro)
+        
 
     if show_effort:
         layer = folium.FeatureGroup(name="Esforço de Monitoramento").add_to(m)
@@ -271,11 +299,11 @@ def main():
         st.session_state.temp_map_center = st.session_state.map_center
 
     # Create two columns
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns([2, 1], gap="medium")
 
     with col1:
         # Display the map but DO NOT update zoom yet
-        st.write("### Indicadores de Monitoramento")
+        st.write("### Indicadores do Monitoramento")
         st_data = st_folium(
             m,
             width="100%",
@@ -319,7 +347,7 @@ def main():
 
         if show_effort:
             # Sort merged_data_effort by dafor_count in descending order and select 'name' and 'dafor_count' columns
-            sorted_merged_data_effort = merged_data_effort[['name', 'dafor_count']].sort_values(by='dafor_count', ascending=False).rename(columns={'name': 'Localidade', 'dafor_count': 'N. Detecções'})
+            sorted_merged_data_effort = merged_data_effort[['name', 'dafor_count']].sort_values(by='dafor_count', ascending=False).rename(columns={'name': 'Localidade', 'dafor_count': 'Esforço (minutos)'})
             # Add 'id' column name
             sorted_merged_data_effort.index.name = 'id'
 

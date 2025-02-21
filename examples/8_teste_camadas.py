@@ -69,18 +69,13 @@ def render_sidebar():
         start_date = st.date_input('Data Inicial', datetime.date(2012, 1, 1))
         end_date = st.date_input('Data Final', datetime.date.today() + datetime.timedelta(days=1))
 
-        with st.expander("Indicadores", expanded=True):
-            show_transects_suncoral = st.checkbox("Transectos com Coral-sol", value=True)
+        layer = st.radio("Camadas", ["Manejos", "Localidades", "Ocorrências", "Monitoramento"])
+        show_management = layer == "Manejos"
+        show_locality = layer == "Localidades"
+        show_occ = layer == "Ocorrências"
+        show_dafor = layer == "Monitoramento"
 
-
-        with st.expander("Camadas", expanded=True):
-            show_management = st.checkbox("Manejos", value=st.session_state.get("show_management", False), key="show_management")
-            show_locality = st.checkbox("Localidades", value=st.session_state.get("show_locality", False), key="show_locality")
-            show_occ = st.checkbox("Ocorrências", value=st.session_state.get("show_occ", False), key="show_occ")
-            show_dafor = st.checkbox("Monitoramento", value=st.session_state.get("show_dafor", False), key="show_dafor")
-
-
-    return start_date, end_date, show_management, show_locality, show_occ, show_dafor, show_transects_suncoral
+    return start_date, end_date, show_management, show_locality, show_occ, show_dafor
 
 # --- Persist Map State ---
 def get_map():
@@ -104,93 +99,14 @@ def get_map():
 
     return m
 
-from branca.element import Template, MacroElement
-
 # --- Update Layers Without Resetting Map ---
-def render_map(m, start_date, end_date, show_management, show_locality, show_occ, show_dafor, show_transects_suncoral):
+def render_map(m, start_date, end_date, show_management, show_locality, show_occ, show_dafor):
     start_date_str = start_date.strftime('%Y-%m-%d')
     end_date_str = end_date.strftime('%Y-%m-%d')
     
-   
-    if show_transects_suncoral:
-        layer = folium.FeatureGroup(name="Transectos com Coral-sol").add_to(m)
-
-        st.write("Debug: Transectos com Coral-sol checkbox is checked.")
-        
-        locality_data = get_locality_data()
-        locality_data['date'] = pd.to_datetime(locality_data['date'], errors='coerce', dayfirst=True)
-
-        filtered_locality_data = locality_data[
-            (locality_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
-            (locality_data['date'] <= pd.to_datetime(end_date_str, errors='coerce'))
-        ]
-        st.write("Debug: Filtered locality data", filtered_locality_data)
-
-        dafor_data = get_dafor_data()
-        dafor_data['date'] = pd.to_datetime(dafor_data['date'], errors='coerce', dayfirst=True)
-
-        # ✅ Convert `dafor_value` to a list of numbers, handling errors
-        dafor_data['dafor_value'] = dafor_data['dafor_value'].apply(lambda x: 
-            [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
-        )
-
-        dafor_data = dafor_data.explode('dafor_value')
-
-        # ✅ Convert `dafor_value` column again to numeric
-        dafor_data['dafor_value'] = pd.to_numeric(dafor_data['dafor_value'], errors='coerce')
-
-        # ✅ Filter out NaN values after conversion
-        filtered_dafor_data = dafor_data[
-            (dafor_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
-            (dafor_data['date'] <= pd.to_datetime(end_date_str, errors='coerce')) &
-            (dafor_data['dafor_value'].notna())  # Remove NaNs
-        ]
-
-        st.write("Debug: Filtered Dafor data", filtered_dafor_data)
-
-        dafor_counts = filtered_dafor_data[filtered_dafor_data['dafor_value'] > 0].groupby('locality_id').size().reset_index(name='dafor_count')
-        st.write("Debug: Dafor counts", dafor_counts)
-
-        # Merge filtered_locality_data with dafor_counts to include 'name' and other locality data
-        merged_data = filtered_locality_data.merge(dafor_counts, on='locality_id', how='left').fillna({'dafor_count': 0})
-        st.write("Debug: Merged data", merged_data)
-
-        for _, row in merged_data.iterrows():
-            try:
-                coords_str = row['coords_local']
-                try:
-                    coords_local = ast.literal_eval(coords_str)
-                except (ValueError, SyntaxError) as e:
-                    st.error(f"Error parsing coordinates for Locality ID {row['locality_id']}: {e}")
-                    continue
-
-                if isinstance(coords_local, list) and len(coords_local) > 0:
-                    dafor_count = row['dafor_count']
-                    if dafor_count > 10:
-                        color = 'red'
-                    elif dafor_count > 5:
-                        color = 'orange'
-                    else:
-                        color = 'green'
-
-                    folium.PolyLine(
-                        coords_local,
-                        color=color,
-                        popup=(
-                            f"<b>Locality:</b> {row['locality_id']}<br>"
-                            f"<b>Name:</b> {row['name']}<br>"
-                            f"<b>Date:</b> {row['date']}<br>"
-                            f"<b>Dafor Count:</b> {dafor_count}"
-                        ),
-                        tooltip=f"Locality {row['locality_id']}"
-                    ).add_to(layer)
-                else:
-                    st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {coords_local}")
-            except Exception as e:
-                st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
-
     # --- Camadas ---
     if show_management:
+        layer = folium.FeatureGroup(name="Manejos").add_to(m)
         data = get_management_data()
         data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d')
         filtered_data = data[(data['date'] >= start_date_str) & (data['date'] <= end_date_str)]
@@ -205,11 +121,10 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                     folium.Marker(
                         [lat, lon],
                         popup=f"Observer: {row['observer']}, Date: {row['date']}, Mass(kg): {row['managed_mass_kg']}",
-                        tooltip=f"Management {row['management_id']}"
+                        tooltip=f"Manejo {row['management_id']}"
                     ).add_to(marker_cluster)
             except Exception as e:
                 st.error(f"Error adding marker: {e}")
-
 
     if show_locality:
         layer = folium.FeatureGroup(name="Localidades").add_to(m)
@@ -231,7 +146,6 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                     st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {locality_coords}")
             except Exception as e:
                 st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
-    
 
     if show_occ:
         marker_cluster = MarkerCluster(disableClusteringAtZoom=5).add_to(m)
@@ -241,33 +155,33 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
 
         for _, row in filtered_data.iterrows():
             try:
-                    coords_str = row['spot_coords']
-                    spot_coords = ast.literal_eval(coords_str)
-                    if isinstance(spot_coords, list) and len(spot_coords) > 0:
-                        lat, lon = spot_coords[0]
-                        occurrence_id = row['occurrence_id']
-                        file_name = row['superficie_photo']
-                        photo_url = f"{base_url}/Upload/UploadImageCoralSol/{occurrence_id}/{file_name}"
-                        response = requests.get(photo_url)
-                        if response.status_code == 200:
-                            base64_image = response.text
-                            popup_html = f"""
-                            <b>Date:</b> {row['date']}<br>
-                            <b>Depth (m):</b> {row['depth']}<br>
-                            <b>Photo:</b><br>
-                            <img src="data:image/png;base64,{base64_image}" width="300"/>
-                            """
-                        else:
-                            popup_html = f"""
-                            <b>Date:</b> {row['date']}<br>
-                            <b>Depth (m):</b> {row['depth']}<br>
-                            <b>Photo:</b> <i>Image not available (Error {response.status_code})</i>
-                            """
-                        folium.Marker(
-                            [lat, lon],
-                            popup=folium.Popup(popup_html, max_width=300),
-                            tooltip=f"Ocorrência {row['occurrence_id']}"
-                        ).add_to(marker_cluster)
+                coords_str = row['spot_coords']
+                spot_coords = ast.literal_eval(coords_str)
+                if isinstance(spot_coords, list) and len(spot_coords) > 0:
+                    lat, lon = spot_coords[0]
+                    occurrence_id = row['occurrence_id']
+                    file_name = row['superficie_photo']
+                    photo_url = f"{base_url}/Upload/UploadImageCoralSol/{occurrence_id}/{file_name}"
+                    response = requests.get(photo_url)
+                    if response.status_code == 200:
+                        base64_image = response.text
+                        popup_html = f"""
+                        <b>Date:</b> {row['date']}<br>
+                        <b>Depth (m):</b> {row['depth']}<br>
+                        <b>Photo:</b><br>
+                        <img src="data:image/png;base64,{base64_image}" width="300"/>
+                        """
+                    else:
+                        popup_html = f"""
+                        <b>Date:</b> {row['date']}<br>
+                        <b>Depth (m):</b> {row['depth']}<br>
+                        <b>Photo:</b> <i>Image not available (Error {response.status_code})</i>
+                        """
+                    folium.Marker(
+                        [lat, lon],
+                        popup=folium.Popup(popup_html, max_width=300),
+                        tooltip=f"Ocorrência {row['occurrence_id']}"
+                    ).add_to(marker_cluster)
             except Exception as e:
                 st.error(f"Error adding marker for Occurrence ID {row['occurrence_id']}: {e}")
 
@@ -291,13 +205,27 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
                 st.error(f"Error adding line for Locality ID {row['dafor_id']}: {e}")
     
     return m
+
 # --- Main Logic ---
 def main():
-    start_date, end_date, show_management, show_locality, show_occ, show_dafor, show_transects_suncoral = render_sidebar()
+    start_date, end_date, show_management, show_locality, show_occ, show_dafor = render_sidebar()
+
+    # --- Display Layer Titles ---
+    if show_management:
+        st.write("### Locais Manejados")
+    
+    if show_locality:
+        st.write("### Localidades")
+        
+    if show_occ:
+        st.write("### Ocorrências")
+    
+    if show_dafor:
+        st.write("### Monitoramentos")
 
     # Load or create the map
     m = get_map()
-    m = render_map(m, start_date, end_date, show_management, show_locality, show_occ, show_dafor, show_transects_suncoral)
+    m = render_map(m, start_date, end_date, show_management, show_locality, show_occ, show_dafor)
 
     # Capture the previous zoom & center
     prev_zoom = st.session_state.map_zoom
@@ -313,7 +241,7 @@ def main():
     st_data = st_folium(
         m,
         width="100%",
-        height= 700,
+        height=700,
         returned_objects=["center", "zoom"],
         key=st.session_state["map_key"],  # 🔥 Forces reloading when changed
     )
@@ -340,7 +268,6 @@ def main():
             st.session_state["map_key"] += 1  # 🔥 Forces full re-render
             st.write(f"Debug: Applied map updates, new key = {st.session_state['map_key']}")
     
-            
 
 if __name__ == "__main__":
     main()
