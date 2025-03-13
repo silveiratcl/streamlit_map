@@ -1,5 +1,6 @@
 import streamlit as st
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from urllib.parse import quote_plus
 import pandas as pd
 import folium
 from streamlit_folium import st_folium
@@ -14,23 +15,39 @@ st.set_page_config(page_title="Camadas", page_icon="🗺️", layout="wide")
 st.logo('./assets/logo_horiz.png', size="large")
 
 # --- Initialize Connection ---
+# --- Initialize Connection ---
 @st.cache_resource
 def init_connection():
     try:
         connection_details = st.secrets["connections"]["apibd"]
+        
+        # URL-encode the password
+        encoded_password = quote_plus(connection_details["password"])
+        
+        # Construct the connection string with the encoded password
         connection_string = (
             f"{connection_details['dialect']}+{connection_details['driver']}://"
-            f"{connection_details['username']}:{connection_details['password']}@"
+            f"{connection_details['username']}:{encoded_password}@"
             f"{connection_details['host']}:{connection_details['port']}/"
             f"{connection_details['database']}"
         )
+        
+        
+        # Create the SQLAlchemy engine
         engine = create_engine(connection_string)
-        return engine.connect()
+        
+        # Test the connection
+        # conn = engine.connect()
+        # conn.execute(text("SELECT 1"))  # Simple test query
+        # st.success("Connected to database successfully!")
+        # return conn
+        
     except Exception as e:
         st.error(f"Database connection error: {e}")
         raise
 
 conn = init_connection()
+
 
 # --- Data Fetching Functions ---
 @st.cache_data
