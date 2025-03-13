@@ -17,7 +17,7 @@ st.logo('./assets/logo_horiz.png', size="large")
 @st.cache_resource
 def init_connection():
     try:
-        connection_details = st.secrets["connections"]["apibd06"]
+        connection_details = st.secrets["connections"]["apibd"]
         connection_string = (
             f"{connection_details['dialect']}+{connection_details['driver']}://"
             f"{connection_details['username']}:{connection_details['password']}@"
