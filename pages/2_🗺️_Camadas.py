@@ -15,7 +15,6 @@ st.set_page_config(page_title="Camadas", page_icon="🗺️", layout="wide")
 st.logo('./assets/logo_horiz.png', size="large")
 
 # --- Initialize Connection ---
-# --- Initialize Connection ---
 @st.cache_resource
 def init_connection():
     try:
@@ -32,20 +31,20 @@ def init_connection():
             f"{connection_details['database']}"
         )
         
-        
         # Create the SQLAlchemy engine
         engine = create_engine(connection_string)
         
         # Test the connection
-        # conn = engine.connect()
-        # conn.execute(text("SELECT 1"))  # Simple test query
-        # st.success("Connected to database successfully!")
-        # return conn
+        conn = engine.connect()
+        conn.execute(text("SELECT 1"))  # Simple test query
+        st.success("Connected to database successfully!")
+        return conn
         
     except Exception as e:
         st.error(f"Database connection error: {e}")
-        raise
+        raise  # Re-raise the exception to stop execution
 
+# Initialize the connection
 conn = init_connection()
 
 
@@ -78,7 +77,8 @@ def get_dafor_data():
     df.columns = map(str.lower, df.columns)
     return df
 
-base_url = "http://coralsol-api.kinghost.net/api"
+base_url = "https://api-bd.institutohorus.org.br/api"
+
 
 # --- Sidebar Widgets ---
 def render_sidebar():

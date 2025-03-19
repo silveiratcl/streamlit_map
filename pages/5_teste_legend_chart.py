@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib import lines
 from matplotlib import patches
 from matplotlib.patheffects import withStroke
+import plotly.express as px
 
 import folium
 from streamlit_folium import st_folium
@@ -43,10 +44,10 @@ def init_connection():
         engine = create_engine(connection_string)
         
         # Test the connection
-        # conn = engine.connect()
-        # conn.execute(text("SELECT 1"))  # Simple test query
-        # st.success("Connected to database successfully!")
-        # return conn
+        conn = engine.connect()
+        conn.execute(text("SELECT 1"))  # Simple test query
+        st.success("Connected to database successfully!")
+        return conn
         
     except Exception as e:
         st.error(f"Database connection error: {e}")
@@ -55,36 +56,38 @@ def init_connection():
 # Initialize the connection
 conn = init_connection()
 
+
 # --- Data Fetching Functions ---
 @st.cache_data
-def get_management_data():
+def get_management_data(ttl=300):
     query = "SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management"
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
-def get_locality_data():
+def get_locality_data(ttl=300):
     query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
-def get_occ_data():
+def get_occ_data(ttl=300):
     query = "SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo FROM data_coralsol_occurrence WHERE Superficie_photo IS NOT NULL LIMIT 10"
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
-def get_dafor_data():
+def get_dafor_data(ttl=300):
     query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method, Dafor_value FROM data_coralsol_dafor"
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
     return df
 
 base_url = "https://api-bd.institutohorus.org.br/api"
+
 
 # --- Sidebar Widgets ---
 def render_sidebar():
@@ -334,67 +337,142 @@ def render_map(m, start_date, end_date, show_transects_suncoral, show_effort):
 
     return m, merged_data, merged_data_effort  # Return the map and merged_data
 
+import plotly.express as px
+
 def render_chart(start_date, end_date, show_year, merged_data):
     if show_year:
-    #      st.write("### Gráfico de Esforço de Monitoramento")
-    #      effort_data = pd.DataFrame(np.random.randn(20, 3), columns=["x", "y", "z"])
-    #      st.line_chart(effort_data)
-     # Convert the start and end dates
+        # Convert the start and end dates
         start_date_str = start_date.strftime('%Y-%m-%d')
         end_date_str = end_date.strftime('%Y-%m-%d')
-        
-        merged_data = pd.DataFrame()  # Initiali
 
+        # Debugging: Print date range
+        st.write(f"Date Range: {start_date_str} to {end_date_str}")
 
+        # Fetch the data
         locality_data = get_locality_data()
-        locality_data['date'] = pd.to_datetime(locality_data['date'], errors='coerce', dayfirst=True)
-
-        filtered_locality_data = locality_data[
-                (locality_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
-                (locality_data['date'] <= pd.to_datetime(end_date_str, errors='coerce'))
-            ]
-
         dafor_data = get_dafor_data()
-        dafor_data['date'] = pd.to_datetime(dafor_data['date'], errors='coerce', dayfirst=True)
+
+        # Debugging: Print raw data
+        st.write("Raw Locality Data:", locality_data)
+        st.write("Raw Dafor Data:", dafor_data)
+
+        # Ensure the 'date' column exists in both DataFrames
+        if 'date' not in locality_data.columns or 'date' not in dafor_data.columns:
+            st.error("The 'date' column is missing in one of the DataFrames.")
+            return None, show_year
+
+        # Convert 'date' columns to datetime
+        locality_data['date'] = pd.to_datetime(locality_data['date'], errors='coerce')
+        dafor_data['date'] = pd.to_datetime(dafor_data['date'], errors='coerce')
 
         # Convert `dafor_value` to a list of numbers, handling errors
         dafor_data['dafor_value'] = dafor_data['dafor_value'].apply(lambda x: 
-                [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
-            )
+            [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
+        )
 
         dafor_data = dafor_data.explode('dafor_value')
 
         # Convert `dafor_value` column again to numeric
         dafor_data['dafor_value'] = pd.to_numeric(dafor_data['dafor_value'], errors='coerce')
 
-            # Filter out NaN values after conversion
+        # Filter out NaN values after conversion
         filtered_dafor_data = dafor_data[
             (dafor_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
             (dafor_data['date'] <= pd.to_datetime(end_date_str, errors='coerce')) &
             (dafor_data['dafor_value'].notna())  # Remove NaNs
         ]
 
-        dafor_counts = filtered_dafor_data[filtered_dafor_data['dafor_value'] > 0].groupby('locality_id').size().reset_index(name='dafor_count')
+        # Debugging: Print filtered data
+        st.write("Filtered Dafor Data:", filtered_dafor_data)
 
-        # Merge filtered_locality_data with dafor_counts to include 'name' and other locality data
-        merged_data = filtered_locality_data.merge(dafor_counts, on='locality_id', how='left').fillna({'dafor_count': 0})
-        st.dataframe(merged_data)
+        # Merge with locality data to get the names
+        merged_data = locality_data.merge(
+            filtered_dafor_data, left_on='locality_id', right_on='locality_id', how='inner'
+        )
 
-    return merged_data, show_year        
+        # Debugging: Print merged data
+        st.write("Merged Data:", merged_data)
+
+        # Use 'date_y' from the merged data
+        if 'date_y' not in merged_data.columns:
+            st.error("The 'date_y' column is missing in the merged data.")
+            return None, show_year
+
+        # Extract the year from 'date_y'
+        merged_data['year'] = merged_data['date_y'].dt.year
+
+        # Debugging: Print unique years
+        st.write("Unique Years in Data:", merged_data['year'].unique())
+
+        # Group by `name` and `year`, and sum the `dafor_value`
+        grouped_data = merged_data.groupby(['name', 'year'])['dafor_value'].sum().reset_index()
+
+        # Debugging: Print grouped data
+        st.write("Grouped Data:", grouped_data)
+
+        # Pivot the data for the line chart
+        pivot_data = grouped_data.pivot(index='year', columns='name', values='dafor_value')
+
+        # Fill NaN values with 0 (if there are years with no data for a specific name)
+        pivot_data = pivot_data.fillna(0)
+
+        # Debugging: Print pivoted data
+        st.write("Pivoted Data:", pivot_data)
+
+        # Accumulate the `dafor_value` over the years
+        pivot_data = pivot_data.cumsum()
+
+        # Reset the index to make 'year' a column
+        pivot_data = pivot_data.reset_index()
+
+        # Melt the DataFrame for Plotly
+        melted_data = pivot_data.melt(id_vars='year', var_name='name', value_name='dafor_value')
+
+        # Create a Plotly line chart
+        fig = px.line(
+            melted_data,
+            x='year',
+            y='dafor_value',
+            color='name',
+            title='Acumulação de Detecções por Ano',
+            labels={'year': 'Ano', 'dafor_value': 'Acumulação de Detecções', 'name': 'Localidade'},
+            markers=True  # Add markers to the lines
+        )
+
+        # Customize the layout
+        fig.update_layout(
+            xaxis_title='Ano',
+            yaxis_title='Acumulação de Detecções',
+            legend_title='Localidade',
+            hovermode='x unified'  # Show hover information for all lines at once
+        )
+
+        # Display the Plotly chart in Streamlit
+        st.plotly_chart(fig)
+
+    return merged_data, show_year
 
 # --- Main Logic ---
 def main():
+    # Render the sidebar and get the selected options
     start_date, end_date, show_transects_suncoral, show_effort, show_year = render_sidebar()
-   
+
+    # If "Detecções por ano" is selected, render only the chart
+    if show_year:
+        # Call the render_chart function
+        merged_data, show_year = render_chart(start_date, end_date, show_year, None)
+        return  # Exit the function early to skip the map and other components
+
+    # If "Detecções por ano" is not selected, render the map and other components
     # Load or create the map
     m = get_map()
     m, merged_data, merged_data_effort = render_map(m, start_date, end_date, show_transects_suncoral, show_effort)
-    
+
     # Capture the previous zoom & center
     prev_zoom = st.session_state.map_zoom
     prev_center = st.session_state.map_center
 
-    # ✅ Temporary storage for zoom & center
+    # Temporary storage for zoom & center
     if "temp_map_zoom" not in st.session_state:
         st.session_state.temp_map_zoom = st.session_state.map_zoom
     if "temp_map_center" not in st.session_state:
@@ -411,12 +489,8 @@ def main():
             width="100%",
             height=700,
             returned_objects=["center", "zoom"],
-            key=st.session_state["map_key"],  # 🔥 Forces reloading when changed
+            key=st.session_state["map_key"],  # Forces reloading when changed
         )
-
-        # Debugging info
-        #st.write(f"Debug: Before update -> Zoom: {prev_zoom}, Center: {prev_center}")
-        #st.write(f"Debug: st_folium returned -> {st_data}")
 
         # Only store zoom & center TEMPORARILY
         if st_data:
@@ -425,7 +499,7 @@ def main():
             if "zoom" in st_data and st_data["zoom"]:
                 st.session_state.temp_map_zoom = st_data["zoom"]
 
-        # ✅ Add a button to apply zoom & center updates
+        # Add a button to apply zoom & center updates
         if st.button("Update Map View"):
             if (
                 st.session_state.temp_map_zoom != prev_zoom or
@@ -433,7 +507,7 @@ def main():
             ):
                 st.session_state.map_zoom = st.session_state.temp_map_zoom
                 st.session_state.map_center = st.session_state.temp_map_center
-                st.session_state["map_key"] += 1  # 🔥 Forces full re-render
+                st.session_state["map_key"] += 1  # Forces full re-render
                 st.write(f"Debug: Applied map updates, new key = {st.session_state['map_key']}")
 
     with col2:
@@ -457,7 +531,6 @@ def main():
             st.write("### Esforço de Monitoramento")
             st.dataframe(sorted_merged_data_effort)
 
-           
     # Now add your conditional charts AFTER both column blocks
     if show_transects_suncoral:
         st.write("### Gráfico de Transectos com Coral-sol")
@@ -517,20 +590,16 @@ def main():
             path_effects=path_effects
         ) 
 
-
         # Display the plot in Streamlit
         st.pyplot(fig)
 
         # Clear the figure to avoid memory leaks
         plt.close(fig)
 
-
-
-    if show_effort: ## pendign 
+    if show_effort: ## pending 
         st.write("### Gráfico de Esforço de Monitoramento")
         effort_data = pd.DataFrame(np.random.randn(20, 3), columns=["x", "y", "z"])
         st.line_chart(effort_data)
-
 
 
 if __name__ == "__main__":
