@@ -19,7 +19,7 @@ import requests
 from branca.element import Template, MacroElement
 
 # --- Page Configuration ---
-st.set_page_config(page_title="Camadas", page_icon="🗺️", layout="wide")
+st.set_page_config(page_title="Indicadores", page_icon="🗺️", layout="wide")
 st.logo('./assets/logo_horiz.png', size="large")
 
 
@@ -46,7 +46,7 @@ def init_connection():
         # Test the connection
         conn = engine.connect()
         conn.execute(text("SELECT 1"))  # Simple test query
-        st.success("Connected to database successfully!")
+       # st.success("Connected to database successfully!")
         return conn
         
     except Exception as e:
@@ -339,116 +339,210 @@ def render_map(m, start_date, end_date, show_transects_suncoral, show_effort):
 
 import plotly.express as px
 
+# def render_chart(start_date, end_date, show_year, merged_data):
+#     if show_year:
+#         # Convert the start and end dates
+#         start_date_str = start_date.strftime('%Y-%m-%d')
+#         end_date_str = end_date.strftime('%Y-%m-%d')
+
+#         # Debugging: Print date range
+#         st.write(f"Date Range: {start_date_str} to {end_date_str}")
+
+#         # Fetch the data
+#         locality_data = get_locality_data()
+#         dafor_data = get_dafor_data()
+
+#         # Debugging: Print raw data
+#         st.write("Raw Locality Data:", locality_data)
+#         st.write("Raw Dafor Data:", dafor_data)
+
+#         # Ensure the 'date' column exists in both DataFrames
+#         if 'date' not in locality_data.columns or 'date' not in dafor_data.columns:
+#             st.error("The 'date' column is missing in one of the DataFrames.")
+#             return None, show_year
+
+#         # Convert 'date' columns to datetime
+#         locality_data['date'] = pd.to_datetime(locality_data['date'], errors='coerce', dayfirst=True)
+#         dafor_data['date'] = pd.to_datetime(dafor_data['date'], errors='coerce', dayfirst=True)
+
+#         # Convert `dafor_value` to a list of numbers, handling errors
+#         dafor_data['dafor_value'] = dafor_data['dafor_value'].apply(lambda x: 
+#             [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
+#         )
+
+#         dafor_data = dafor_data.explode('dafor_value')
+
+#         # Convert `dafor_value` column again to numeric
+#         dafor_data['dafor_value'] = pd.to_numeric(dafor_data['dafor_value'], errors='coerce')
+
+#         # Filter out NaN values after conversion
+#         filtered_dafor_data = dafor_data[
+#             (dafor_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
+#             (dafor_data['date'] <= pd.to_datetime(end_date_str, errors='coerce')) &
+#             (dafor_data['dafor_value'].notna())  # Remove NaNs
+#         ]
+        
+#         # Debugging: Print filtered data
+#         st.write("Filtered Dafor Data:", filtered_dafor_data)
+
+#         # Merge with locality data to get the names
+#         merged_data = locality_data.merge(
+#             filtered_dafor_data, left_on='locality_id', right_on='locality_id', how='inner'
+#         )
+
+#         # Debugging: Print merged data
+#         st.write("Merged Data:", merged_data)
+
+#         # Use 'date_y' from the merged data
+#         if 'date_y' not in merged_data.columns:
+#             st.error("The 'date_y' column is missing in the merged data.")
+#             return None, show_year
+
+#         # Extract the year from 'date_y'
+#         merged_data['year'] = merged_data['date_y'].dt.year
+
+#         # Debugging: Print unique years
+#         st.write("Unique Years in Data:", merged_data['year'].unique())
+
+#         # Group by `name` and `year`, and sum the `dafor_value`
+#         grouped_data = merged_data.groupby(['name', 'year'])['dafor_value'].sum().reset_index()
+
+#         # Debugging: Print grouped data
+#         st.write("Grouped Data:", grouped_data)
+
+#         # Pivot the data for the line chart
+#         pivot_data = grouped_data.pivot(index='year', columns='name', values='dafor_value')
+
+#         # Fill NaN values with 0 (if there are years with no data for a specific name)
+#         pivot_data = pivot_data.fillna(0)
+
+#         # Debugging: Print pivoted data
+#         st.write("Pivoted Data:", pivot_data)
+
+#         # Accumulate the `dafor_value` over the years
+#         pivot_data = pivot_data.cumsum()
+
+#         # Reset the index to make 'year' a column
+#         pivot_data = pivot_data.reset_index()
+
+#         # Melt the DataFrame for Plotly
+#         melted_data = pivot_data.melt(id_vars='year', var_name='name', value_name='dafor_value')
+
+#         # Create a Plotly line chart
+#         fig = px.line(
+#             melted_data,
+#             x='year',
+#             y='dafor_value',
+#             color='name',
+#             title='Acumulação de Detecções por Ano',
+#             labels={'year': 'Ano', 'dafor_value': 'Acumulação de Detecções', 'name': 'Localidade'},
+#             markers=True  # Add markers to the lines
+#         )
+
+#         # Customize the layout
+#         fig.update_layout(
+#             xaxis_title='Ano',
+#             yaxis_title='Acumulação de Detecções',
+#             legend_title='Localidade',
+#             hovermode='x unified'  # Show hover information for all lines at once
+#         )
+
+#         # Display the Plotly chart in Streamlit
+#         st.plotly_chart(fig)
+
+#     return merged_data, show_year
+
 def render_chart(start_date, end_date, show_year, merged_data):
     if show_year:
         # Convert the start and end dates
         start_date_str = start_date.strftime('%Y-%m-%d')
         end_date_str = end_date.strftime('%Y-%m-%d')
 
-        # Debugging: Print date range
-        st.write(f"Date Range: {start_date_str} to {end_date_str}")
-
         # Fetch the data
         locality_data = get_locality_data()
         dafor_data = get_dafor_data()
 
-        # Debugging: Print raw data
-        st.write("Raw Locality Data:", locality_data)
-        st.write("Raw Dafor Data:", dafor_data)
-
-        # Ensure the 'date' column exists in both DataFrames
-        if 'date' not in locality_data.columns or 'date' not in dafor_data.columns:
-            st.error("The 'date' column is missing in one of the DataFrames.")
-            return None, show_year
-
         # Convert 'date' columns to datetime
-        locality_data['date'] = pd.to_datetime(locality_data['date'], errors='coerce')
-        dafor_data['date'] = pd.to_datetime(dafor_data['date'], errors='coerce')
+        locality_data['date'] = pd.to_datetime(locality_data['date'], errors='coerce', dayfirst=True)
+        dafor_data['date'] = pd.to_datetime(dafor_data['date'], errors='coerce', dayfirst=True)
 
-        # Convert `dafor_value` to a list of numbers, handling errors
-        dafor_data['dafor_value'] = dafor_data['dafor_value'].apply(lambda x: 
-            [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
+        # Process dafor_value - split into individual values and explode
+        dafor_data['dafor_value'] = dafor_data['dafor_value'].apply(
+            lambda x: [pd.to_numeric(i, errors='coerce') for i in str(x).split(',')]
         )
-
         dafor_data = dafor_data.explode('dafor_value')
-
-        # Convert `dafor_value` column again to numeric
         dafor_data['dafor_value'] = pd.to_numeric(dafor_data['dafor_value'], errors='coerce')
 
-        # Filter out NaN values after conversion
+        # Filter data by date range and remove NaNs
         filtered_dafor_data = dafor_data[
             (dafor_data['date'] >= pd.to_datetime(start_date_str, errors='coerce')) &
             (dafor_data['date'] <= pd.to_datetime(end_date_str, errors='coerce')) &
-            (dafor_data['dafor_value'].notna())  # Remove NaNs
+            (dafor_data['dafor_value'].notna())
         ]
 
-        # Debugging: Print filtered data
-        st.write("Filtered Dafor Data:", filtered_dafor_data)
-
-        # Merge with locality data to get the names
+        # Merge with locality data
         merged_data = locality_data.merge(
-            filtered_dafor_data, left_on='locality_id', right_on='locality_id', how='inner'
+            filtered_dafor_data, 
+            left_on='locality_id', 
+            right_on='locality_id', 
+            how='inner'
         )
 
-        # Debugging: Print merged data
-        st.write("Merged Data:", merged_data)
-
-        # Use 'date_y' from the merged data
-        if 'date_y' not in merged_data.columns:
-            st.error("The 'date_y' column is missing in the merged data.")
-            return None, show_year
-
-        # Extract the year from 'date_y'
+        # Extract year from date
         merged_data['year'] = merged_data['date_y'].dt.year
 
-        # Debugging: Print unique years
-        st.write("Unique Years in Data:", merged_data['year'].unique())
+        # Calculate effort (count of values) and detections (values > 0)
+        effort_data = merged_data.groupby(['name', 'year']).agg(
+            total_effort=('dafor_value', 'count'),  # Each value = 1 minute of effort
+            total_detections=('dafor_value', lambda x: (x > 0).sum())  # Count of values > 0
+        ).reset_index()
 
-        # Group by `name` and `year`, and sum the `dafor_value`
-        grouped_data = merged_data.groupby(['name', 'year'])['dafor_value'].sum().reset_index()
+        # Calculate detections per 60 minutes of effort
+        effort_data['detections_per_60min'] = (effort_data['total_detections'] / 
+                                             effort_data['total_effort']) * 60
 
-        # Debugging: Print grouped data
-        st.write("Grouped Data:", grouped_data)
-
-        # Pivot the data for the line chart
-        pivot_data = grouped_data.pivot(index='year', columns='name', values='dafor_value')
-
-        # Fill NaN values with 0 (if there are years with no data for a specific name)
-        pivot_data = pivot_data.fillna(0)
-
-        # Debugging: Print pivoted data
-        st.write("Pivoted Data:", pivot_data)
-
-        # Accumulate the `dafor_value` over the years
-        pivot_data = pivot_data.cumsum()
-
-        # Reset the index to make 'year' a column
-        pivot_data = pivot_data.reset_index()
-
-        # Melt the DataFrame for Plotly
-        melted_data = pivot_data.melt(id_vars='year', var_name='name', value_name='dafor_value')
-
-        # Create a Plotly line chart
+        # Create Plotly line chart
         fig = px.line(
-            melted_data,
+            effort_data,
             x='year',
-            y='dafor_value',
+            y='detections_per_60min',
             color='name',
-            title='Acumulação de Detecções por Ano',
-            labels={'year': 'Ano', 'dafor_value': 'Acumulação de Detecções', 'name': 'Localidade'},
-            markers=True  # Add markers to the lines
+            title='Detecções por 60 minutos de esforço por Ano',
+            labels={
+                'year': 'Ano',
+                'detections_per_60min': 'Detecções por 60 minutos',
+                'name': 'Localidade'
+            },
+            markers=True
         )
 
-        # Customize the layout
+        # Customize layout
         fig.update_layout(
             xaxis_title='Ano',
-            yaxis_title='Acumulação de Detecções',
+            yaxis_title='Detecções por 60 minutos de esforço',
             legend_title='Localidade',
-            hovermode='x unified'  # Show hover information for all lines at once
+            hovermode='x unified',
+            yaxis=dict(tickformat=".1f")  # Show 1 decimal place
         )
 
-        # Display the Plotly chart in Streamlit
+        # Add hover template
+        fig.update_traces(
+            hovertemplate=(
+                "<b>%{x}</b><br>"
+                "Localidade: %{fullData.name}<br>"
+                "Detecções: %{customdata[0]}<br>"
+                "Esforço: %{customdata[1]} min<br>"
+                "Taxa: %{y:.1f} det/60min"
+            ),
+            customdata=effort_data[['total_detections', 'total_effort']].values
+        )
+
+        # Display the chart
         st.plotly_chart(fig)
+
+        # Show data table
+        st.write("Dados de Esforço e Detecções:")
+        st.dataframe(effort_data)
 
     return merged_data, show_year
 
@@ -531,75 +625,75 @@ def main():
             st.write("### Esforço de Monitoramento")
             st.dataframe(sorted_merged_data_effort)
 
-    # Now add your conditional charts AFTER both column blocks
-    if show_transects_suncoral:
-        st.write("### Gráfico de Transectos com Coral-sol")
-        # Extract the data from the DataFrame
-        sorted_merged_data = sorted_merged_data.sort_values(by='N. Detecções', ascending=True)
-        names = sorted_merged_data['Localidade'].tolist()  # Convert the 'Localidade' column to a list
-        counts = sorted_merged_data['N. Detecções'].tolist()  # Convert the 'N. Detecções' column to a list
+    # # Now add your conditional charts AFTER both column blocks
+    # if show_transects_suncoral:
+    #     st.write("### Gráfico de Transectos com Coral-sol")
+    #     # Extract the data from the DataFrame
+    #     sorted_merged_data = sorted_merged_data.sort_values(by='N. Detecções', ascending=True)
+    #     names = sorted_merged_data['Localidade'].tolist()  # Convert the 'Localidade' column to a list
+    #     counts = sorted_merged_data['N. Detecções'].tolist()  # Convert the 'N. Detecções' column to a list
     
-        # The positions for the bars
-        y = [i * 0.9 for i in range(len(names))]
+    #     # The positions for the bars
+    #     y = [i * 0.9 for i in range(len(names))]
 
-        # The colors
-        BLUE = "#076fa2"
-        RED = "#E3120B"
-        BLACK = "#202020"
-        GREY = "#a2a2a2"
+    #     # The colors
+    #     BLUE = "#076fa2"
+    #     RED = "#E3120B"
+    #     BLACK = "#202020"
+    #     GREY = "#a2a2a2"
 
-        # Create the plot
-        fig, ax = plt.subplots(figsize=(12, 7))
-        ax.barh(y, counts, height=0.55, align="edge", color=BLUE)
+    #     # Create the plot
+    #     fig, ax = plt.subplots(figsize=(12, 7))
+    #     ax.barh(y, counts, height=0.55, align="edge", color=BLUE)
 
-        # Set labels and title
-        ax.xaxis.set_ticks([i * 5 for i in range(0, 12)])
-        ax.xaxis.set_ticklabels([i * 5 for i in range(0, 12)], size=16, fontfamily="Econ Sans Cnd", fontweight=100)
-        ax.xaxis.set_tick_params(labelbottom=False, labeltop=True, length=0)
+    #     # Set labels and title
+    #     ax.xaxis.set_ticks([i * 5 for i in range(0, 12)])
+    #     ax.xaxis.set_ticklabels([i * 5 for i in range(0, 12)], size=16, fontfamily="Econ Sans Cnd", fontweight=100)
+    #     ax.xaxis.set_tick_params(labelbottom=False, labeltop=True, length=0)
 
-        ax.set_xlim((0, 55.5)) # max in sorted merged data
-        ax.set_ylim((0, len(names) * 0.9 - 0.2))
+    #     ax.set_xlim((0, 55.5)) # max in sorted merged data
+    #     ax.set_ylim((0, len(names) * 0.9 - 0.2))
 
-        # Set whether axis ticks and gridlines are above or below most artists.
-        ax.set_axisbelow(True)
-        ax.grid(axis = "x", color="#A8BAC4", lw=1.2)
-        ax.spines["right"].set_visible(False)
-        ax.spines["top"].set_visible(False)
-        ax.spines["bottom"].set_visible(False)
-        ax.spines["left"].set_lw(1.5)
-        # This capstyle determines the lines don't go beyond the limit we specified
-        # see: https://matplotlib.org/stable/api/_enums_api.html?highlight=capstyle#matplotlib._enums.CapStyle
-        ax.spines["left"].set_capstyle("butt")
+    #     # Set whether axis ticks and gridlines are above or below most artists.
+    #     ax.set_axisbelow(True)
+    #     ax.grid(axis = "x", color="#A8BAC4", lw=1.2)
+    #     ax.spines["right"].set_visible(False)
+    #     ax.spines["top"].set_visible(False)
+    #     ax.spines["bottom"].set_visible(False)
+    #     ax.spines["left"].set_lw(1.5)
+    #     # This capstyle determines the lines don't go beyond the limit we specified
+    #     # see: https://matplotlib.org/stable/api/_enums_api.html?highlight=capstyle#matplotlib._enums.CapStyle
+    #     ax.spines["left"].set_capstyle("butt")
 
-        # Hide y labels
-        ax.yaxis.set_visible(False)
+    #     # Hide y labels
+    #     ax.yaxis.set_visible(False)
 
-        PAD = 0.3
-        for name, count, y_pos in zip(names, counts, y):
-            x = 0
-            color = "white"
-            path_effects = None
-            if count < 8:
-                x = count
-                color = BLUE    
-                path_effects=[withStroke(linewidth=6, foreground="white")]
+    #     PAD = 0.3
+    #     for name, count, y_pos in zip(names, counts, y):
+    #         x = 0
+    #         color = "white"
+    #         path_effects = None
+    #         if count < 8:
+    #             x = count
+    #             color = BLUE    
+    #             path_effects=[withStroke(linewidth=6, foreground="white")]
     
-            ax.text(
-            x + PAD, y_pos + 0.5 / 2, name, 
-            color=color, fontfamily="Econ Sans Cnd", fontsize=18, va="center",
-            path_effects=path_effects
-        ) 
+    #         ax.text(
+    #         x + PAD, y_pos + 0.5 / 2, name, 
+    #         color=color, fontfamily="Econ Sans Cnd", fontsize=18, va="center",
+    #         path_effects=path_effects
+    #     ) 
 
-        # Display the plot in Streamlit
-        st.pyplot(fig)
+    #     # Display the plot in Streamlit
+    #     st.pyplot(fig)
 
-        # Clear the figure to avoid memory leaks
-        plt.close(fig)
+    #     # Clear the figure to avoid memory leaks
+    #     plt.close(fig)
 
-    if show_effort: ## pending 
-        st.write("### Gráfico de Esforço de Monitoramento")
-        effort_data = pd.DataFrame(np.random.randn(20, 3), columns=["x", "y", "z"])
-        st.line_chart(effort_data)
+    # if show_effort: ## pending 
+    #     st.write("### Gráfico de Esforço de Monitoramento")
+    #     effort_data = pd.DataFrame(np.random.randn(20, 3), columns=["x", "y", "z"])
+    #     st.line_chart(effort_data)
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ def init_connection():
         # Test the connection
         conn = engine.connect()
         conn.execute(text("SELECT 1"))  # Simple test query
-        st.success("Connected to database successfully!")
+        #st.success("Connected to database successfully!")
         return conn
         
     except Exception as e:
