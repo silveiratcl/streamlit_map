@@ -91,17 +91,23 @@ base_url = "https://api-bd.institutohorus.org.br/api"
 
 # --- Sidebar Widgets ---
 def render_sidebar():
-    with st.sidebar:
+    with st.sidebar:  # ← THIS IS THE CRUCIAL ADDITION
+        st.header("Filtros de Monitoramento")
+        
         start_date = st.date_input('Data Inicial', datetime.date(2012, 1, 1))
         end_date = st.date_input('Data Final', datetime.date.today() + datetime.timedelta(days=1))
 
-        indicator = st.radio("Indicadores", ["Transectos com Coral-sol", "Esforço de Monitoramento", "Detecções por ano"  ])
+        indicator = st.radio("Indicadores", [
+            "Transectos com Coral-sol", 
+            "Esforço de Monitoramento", 
+            "Detecções por ano"
+        ])
+        
         show_transects_suncoral = indicator == "Transectos com Coral-sol"
         show_effort = indicator == "Esforço de Monitoramento"
         show_year = indicator == "Detecções por ano"
-       # show_year_managed_mass = indicator == "Detecções vs. Massa Manejada"
 
-    return start_date, end_date, show_transects_suncoral, show_effort, show_year ###### 
+    return start_date, end_date, show_transects_suncoral, show_effort, show_year
 
 # --- Legend Template ---
 
