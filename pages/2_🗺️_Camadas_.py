@@ -49,11 +49,22 @@ conn = init_connection()
 
 
 # --- Data Fetching Functions ---
+#@st.cache_data
+#def get_management_data():
+ #   query = "SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management"
+  #  df = pd.read_sql(query, conn)
+   # df.columns = map(str.lower, df.columns)
+    #return df
+
 @st.cache_data
 def get_management_data():
     query = "SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management"
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
+    
+    # Convert date column with correct format
+    df['date'] = pd.to_datetime(df['date'], format='%d/%m/%Y', errors='coerce')
+    
     return df
 
 @st.cache_data
@@ -61,6 +72,7 @@ def get_locality_data():
     query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
+    df['date'] = pd.to_datetime(df['date'], dayfirst=True, errors='coerce')
     return df
 
 @st.cache_data
@@ -68,6 +80,7 @@ def get_occ_data():
     query = "SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo FROM data_coralsol_occurrence WHERE Superficie_photo IS NOT NULL LIMIT 10"
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
+    df['date'] = pd.to_datetime(df['date'], dayfirst=True, errors='coerce')
     return df
 
 @st.cache_data
@@ -75,6 +88,7 @@ def get_dafor_data():
     query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method, Dafor_value FROM data_coralsol_dafor"
     df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
+    df['date'] = pd.to_datetime(df['date'], dayfirst=True, errors='coerce')
     return df
 
 base_url = "https://api-bd.institutohorus.org.br/api"
@@ -125,8 +139,8 @@ def render_map(m, start_date, end_date, show_management, show_locality, show_occ
     if show_management:
         layer = folium.FeatureGroup(name="Manejos").add_to(m)
         data = get_management_data()
-        data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d')
-        filtered_data = data[(data['date'] >= start_date_str) & (data['date'] <= end_date_str)]
+        filtered_data = data[(data['date'] >= pd.to_datetime(start_date)) & 
+                           (data['date'] <= pd.to_datetime(end_date))]
 
         marker_cluster = MarkerCluster().add_to(m)
         for _, row in filtered_data.iterrows():
