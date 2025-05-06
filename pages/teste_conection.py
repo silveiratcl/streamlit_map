@@ -4,7 +4,6 @@ from urllib.parse import quote_plus
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import lines, patches, patheffects
 import plotly.express as px
 import folium
 from streamlit_folium import st_folium
@@ -32,58 +31,77 @@ def init_connection():
         )
         
         engine = create_engine(connection_string)
+        
+        # Test connection
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
+            
         return engine
     except Exception as e:
-        st.error(f"Database connection error: {e}")
-        raise
+        st.error(f"Erro de conexão com o banco de dados: {str(e)}")
+        st.stop()
 
-# Initialize the connection
+# Initialize connection
 engine = init_connection()
 
 # --- Data Fetching Functions ---
 @st.cache_data
 def get_management_data(ttl=300):
-    query = text("SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management")
-    with engine.connect() as conn:
-        df = pd.read_sql(query, conn)
-    df.columns = map(str.lower, df.columns)
-    return df
+    try:
+        query = text("SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management")
+        with engine.connect() as conn:
+            df = pd.read_sql(query, conn)
+        df.columns = map(str.lower, df.columns)
+        return df
+    except Exception as e:
+        st.error(f"Erro ao obter dados de gerenciamento: {str(e)}")
+        return pd.DataFrame()
 
 @st.cache_data
 def get_locality_data(ttl=300):
-    query = text("SELECT locality_id, coords_local, name, date FROM data_coralsol_locality")
-    with engine.connect() as conn:
-        df = pd.read_sql(query, conn)
-    df.columns = map(str.lower, df.columns)
-    return df
+    try:
+        query = text("SELECT locality_id, coords_local, name, date FROM data_coralsol_locality")
+        with engine.connect() as conn:
+            df = pd.read_sql(query, conn)
+        df.columns = map(str.lower, df.columns)
+        return df
+    except Exception as e:
+        st.error(f"Erro ao obter dados de localidade: {str(e)}")
+        return pd.DataFrame()
 
 @st.cache_data
 def get_occ_data(ttl=300):
-    query = text("""
-        SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo 
-        FROM data_coralsol_occurrence 
-        WHERE Superficie_photo IS NOT NULL 
-        LIMIT 10
-    """)
-    with engine.connect() as conn:
-        df = pd.read_sql(query, conn)
-    df.columns = map(str.lower, df.columns)
-    return df
+    try:
+        query = text("""
+            SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo 
+            FROM data_coralsol_occurrence 
+            WHERE Superficie_photo IS NOT NULL 
+            LIMIT 10
+        """)
+        with engine.connect() as conn:
+            df = pd.read_sql(query, conn)
+        df.columns = map(str.lower, df.columns)
+        return df
+    except Exception as e:
+        st.error(f"Erro ao obter dados de ocorrência: {str(e)}")
+        return pd.DataFrame()
 
 @st.cache_data
 def get_dafor_data(ttl=300):
-    query = text("""
-        SELECT Dafor_id, Locality_id, Dafor_coords, Date, 
-               Horizontal_visibility, Bathymetric_zone, Method, Dafor_value 
-        FROM data_coralsol_dafor
-    """)
-    with engine.connect() as conn:
-        df = pd.read_sql(query, conn)
-    df.columns = map(str.lower, df.columns)
-    return df
-
+    try:
+        query = text("""
+            SELECT Dafor_id, Locality_id, Dafor_coords, Date, 
+                   Horizontal_visibility, Bathymetric_zone, Method, Dafor_value 
+            FROM data_coralsol_dafor
+        """)
+        with engine.connect() as conn:
+            df = pd.read_sql(query, conn)
+        df.columns = map(str.lower, df.columns)
+        return df
+    except Exception as e:
+        st.error(f"Erro ao obter dados DAFOR: {str(e)}")
+        return pd.DataFrame()
+        
 base_url = "https://api-bd.institutohorus.org.br/api"
 
 
