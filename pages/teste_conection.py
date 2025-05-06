@@ -1,63 +1,86 @@
 import streamlit as st
 from sqlalchemy import create_engine, text
 from urllib.parse import quote_plus
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import lines
-from matplotlib import patches
-from matplotlib.patheffects import withStroke
+from matplotlib import lines, patches, patheffects
 import plotly.express as px
-
 import folium
 from streamlit_folium import st_folium
 import ast
 import datetime
-from folium.plugins import MarkerCluster, Fullscreen
-import requests
+from folium.plugins import Fullscreen
 from branca.element import Template, MacroElement
 
 # --- Page Configuration ---
 st.set_page_config(page_title="Indicadores", page_icon="🗺️", layout="wide")
 st.logo('./assets/logo_horiz.png', size="large")
 
-
 # --- Initialize Connection ---
 @st.cache_resource
 def init_connection():
-    # Use Streamlit's built-in connection system
-    return st.connection("apibd", type="sql")
+    try:
+        connection_details = st.secrets["connections"]["apibd"]
+        encoded_password = quote_plus(connection_details["password"])
+        
+        connection_string = (
+            f"{connection_details['dialect']}+{connection_details['driver']}://"
+            f"{connection_details['username']}:{encoded_password}@"
+            f"{connection_details['host']}:{connection_details['port']}/"
+            f"{connection_details['database']}"
+        )
+        
+        engine = create_engine(connection_string)
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return engine
+    except Exception as e:
+        st.error(f"Database connection error: {e}")
+        raise
 
 # Initialize the connection
-conn = init_connection()
+engine = init_connection()
 
 # --- Data Fetching Functions ---
 @st.cache_data
 def get_management_data(ttl=300):
-    query = "SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management"
-    df = conn.query(query, ttl=ttl)
+    query = text("SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management")
+    with engine.connect() as conn:
+        df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_locality_data(ttl=300):
-    query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
-    df = conn.query(query, ttl=ttl)
+    query = text("SELECT locality_id, coords_local, name, date FROM data_coralsol_locality")
+    with engine.connect() as conn:
+        df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_occ_data(ttl=300):
-    query = "SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo FROM data_coralsol_occurrence WHERE Superficie_photo IS NOT NULL LIMIT 10"
-    df = conn.query(query, ttl=ttl)
+    query = text("""
+        SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo 
+        FROM data_coralsol_occurrence 
+        WHERE Superficie_photo IS NOT NULL 
+        LIMIT 10
+    """)
+    with engine.connect() as conn:
+        df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_dafor_data(ttl=300):
-    query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method, Dafor_value FROM data_coralsol_dafor"
-    df = conn.query(query, ttl=ttl)
+    query = text("""
+        SELECT Dafor_id, Locality_id, Dafor_coords, Date, 
+               Horizontal_visibility, Bathymetric_zone, Method, Dafor_value 
+        FROM data_coralsol_dafor
+    """)
+    with engine.connect() as conn:
+        df = pd.read_sql(query, conn)
     df.columns = map(str.lower, df.columns)
     return df
 
@@ -584,6 +607,8 @@ def main():
             # Display the sorted table
             st.write("### Esforço de Monitoramento")
             st.dataframe(sorted_merged_data_effort)
+
+        
 
     # # Now add your conditional charts AFTER both column blocks
     # if show_transects_suncoral:
