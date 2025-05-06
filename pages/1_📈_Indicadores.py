@@ -5,9 +5,6 @@ from urllib.parse import quote_plus
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import lines
-from matplotlib import patches
-from matplotlib.patheffects import withStroke
 import plotly.express as px
 
 import folium

@@ -48,27 +48,6 @@ Rare: This category encompasses instances where between 1 and 5 colonies are spa
 Absent: In this class, no records of sun coral occurrences are found.
 During the assessment process, divers move along transects delimited by 1 minute of sampling. Observations made on the DAFOR scale are then converted to a relative abundance index (RAI) using the following classification: 10 - dominant, 8 - abundant, 6 - frequent, 4 - occasional, 2 - rare; zero - absent.
 
-### Rocky Shore Geomorphology
-For each monitored segment, we record information about the geomorphological structure of the rocky shores. The aim is to document the presence of different geomorphologies on a semi-quantitative scale of area, which helps identify and quantify the relevant structures related to the occurrence and absence of sun coral. The assessment method is described in Silveira et al. (2023).
-
-The assessed geomorphologies are as follows:
-
-Crevices and Cracks (CrCr): Refers to grooves and openings ranging from 10cm to 50cm on the rocky shore, where full diver access is hindered.
-Boulders and Cliffs (BC): Large rocks with irregular shapes, typically exceeding 5 meters in height and width. Cliffs consist of vertical walls of consolidated substrate.
-Small and Medium Rocks (SMR): Medium rocks have a height and diameter between 2 and 5 meters, while small rocks are smaller than 2 meters in diameter and height (Figure 8).
-Flat Slabs (FS): Smooth rock areas with minimal complexity, spanning more than 5 meters in extent (Figure 9).
-Caves and Caverns (CC): Locations where divers can enter and observe the interior (Figure 10).
-The characterization of geomorphology is classified using a semi-quantitative scale of area. Each geomorphology is evaluated and assigned a relative area coverage class based on the DAFOR scale (Sutherland, 2006):
-
-Dominant: Occupies 51% to 100% of the area, highly evident and dominant in the landscape.
-Abundant: Occupies 31% to 50% of the area, present but not exceeding 50% of the total area.
-Frequent: Occupies 16% to 30% of the area.
-Occasional: Occupies 6% to 15% of the area.
-Rare: Occupies 1% to 5% of the area.
-Absent: No records of occurrences.
-During the assessment, divers move along transects delimited by 5 minutes of sampling. Observations for each geomorphology are classified on the scale and converted into a relative area coverage index for the geomorphology (RACIGeo) using the following classification: 10 - dominant, 8 - abundant, 6 - frequent, 4 - occasional, 2 - rare; zero - absent. These values are then used to calculate the Habitat Suitability Index (HSI) using the equation (Silveira et al., 2023):
-
-HSI=(CrCr+BC+SMR+(−1∗(FS−10))+(−1∗(CC−10)))/5
 
 ## Data displayed on Map
 
