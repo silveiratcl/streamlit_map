@@ -1,14 +1,17 @@
-# Core
+ Core
 streamlit==1.22.0
-pandas==1.5.0
-numpy==1.23.0
+pandas==1.5.3
+numpy==1.23.3  # Updated version with better Py3.12 support
 
 # Visualization
-matplotlib==3.6.0
-plotly==6.0.1
+matplotlib==3.6.3
+plotly==5.18.0  # Explicitly added
 folium==0.14.0
 streamlit-folium==0.11.1
 
 # Database
-sqlalchemy==1.4.41
-pymysql==1.0.2
+sqlalchemy==1.4.46
+pymysql==1.1.0
+
+# System dependencies
+setuptools==68.2.2  # Required for distutils
