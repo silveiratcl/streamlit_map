@@ -5,9 +5,6 @@ from urllib.parse import quote_plus
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import lines
-from matplotlib import patches
-from matplotlib.patheffects import withStroke
 import plotly.express as px
 
 import folium
@@ -91,17 +88,23 @@ base_url = "https://api-bd.institutohorus.org.br/api"
 
 # --- Sidebar Widgets ---
 def render_sidebar():
-    with st.sidebar:
+    with st.sidebar:  # ← THIS IS THE CRUCIAL ADDITION
+        st.header("Filtros de Monitoramento")
+        
         start_date = st.date_input('Data Inicial', datetime.date(2012, 1, 1))
         end_date = st.date_input('Data Final', datetime.date.today() + datetime.timedelta(days=1))
 
-        indicator = st.radio("Indicadores", ["Transectos com Coral-sol", "Esforço de Monitoramento", "Detecções por ano", "Detecções vs. Massa Manejada"])
+        indicator = st.radio("Indicadores", [
+            "Transectos com Coral-sol", 
+            "Esforço de Monitoramento", 
+            "Detecções por ano"
+        ])
+        
         show_transects_suncoral = indicator == "Transectos com Coral-sol"
         show_effort = indicator == "Esforço de Monitoramento"
         show_year = indicator == "Detecções por ano"
-        show_year_managed_mass = indicator == "Detecções vs. Massa Manejada"
 
-    return start_date, end_date, show_transects_suncoral, show_effort, show_year, show_year_managed_mass ###### 
+    return start_date, end_date, show_transects_suncoral, show_effort, show_year
 
 # --- Legend Template ---
 
@@ -340,7 +343,7 @@ def render_map(m, start_date, end_date, show_transects_suncoral, show_effort):
 
 import plotly.express as px
 
-def render_chart(start_date, end_date, merged_data, show_year, show_year_managed_mass):
+def render_chart(start_date, end_date, show_year, merged_data):
     if show_year:
         # Convert the start and end dates
         start_date_str = start_date.strftime('%Y-%m-%d')
@@ -523,23 +526,23 @@ def render_chart(start_date, end_date, merged_data, show_year, show_year_managed
         st.write("Dados de Esforço e Detecções:")
         st.dataframe(effort_data)
 
+    
 
-    return merged_data, show_year, show_year_managed_mass
+
+
+
+
+    return merged_data, show_year
 
 # --- Main Logic ---
 def main():
     # Render the sidebar and get the selected options
-    start_date, end_date, show_transects_suncoral, show_effort, show_year, show_year_managed_mass  = render_sidebar()
+    start_date, end_date, show_transects_suncoral, show_effort, show_year = render_sidebar()
 
     # If "Detecções por ano" is selected, render only the chart
     if show_year:
         # Call the render_chart function
-        merged_data, show_year, _ = render_chart(start_date, end_date, None, show_year, False)
-        return  # Exit the function early to skip the map and other components
-    
-    if show_year_managed_mass:
-        # Call the render_chart function
-        merged_data, _, show_year_managed_mass = render_chart(start_date, end_date, None, False, show_year_managed_mass)
+        merged_data, show_year = render_chart(start_date, end_date, show_year, None)
         return  # Exit the function early to skip the map and other components
 
     # If "Detecções por ano" is not selected, render the map and other components

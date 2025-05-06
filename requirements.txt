@@ -3,3 +3,4 @@ pymysql
 SQLAlchemy
 folium
 streamlit_folium
+matplotlib>=3.0.0
