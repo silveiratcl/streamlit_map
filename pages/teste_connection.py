@@ -48,8 +48,9 @@ engine = init_connection()
 
 # --- Data Fetching Functions ---
 @st.cache_data
-def get_locality_data(ttl=300):
-    query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
+@st.cache_data
+def get_management_data(ttl=300):
+    query = "SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management"
     with engine.begin() as connection:
         df = pd.read_sql(query, con=connection.connection)
     df.columns = map(str.lower, df.columns)
