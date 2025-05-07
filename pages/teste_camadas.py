@@ -113,116 +113,114 @@ def get_map():
     return m
 
 # --- Update Layers Without Resetting Map ---
+# --- Update Layers Without Resetting Map ---
 def render_map(m, start_date, end_date, show_management, show_locality, show_occ, show_dafor):
-    # Convert start_date and end_date to datetime objects once
-    start_dt = pd.to_datetime(start_date)
-    end_dt = pd.to_datetime(end_date)
+    # Convert start_date and end_date to datetime objects with dayfirst=True
+    start_dt = pd.to_datetime(start_date, dayfirst=True)
+    end_dt = pd.to_datetime(end_date, dayfirst=True)
     
-    # --- Camadas ---
+    # Helper function for consistent date parsing
+    def parse_dates(df):
+        df['date'] = pd.to_datetime(df['date'], dayfirst=True, errors='coerce')
+        return df.dropna(subset=['date'])  # Remove rows with invalid dates
+
+    # --- Management Layer ---
     if show_management:
-        layer = folium.FeatureGroup(name="Manejos").add_to(m)
-        data = get_management_data()
-        # Convert data['date'] to datetime if it's not already
-        data['date'] = pd.to_datetime(data['date'])
-        filtered_data = data[(data['date'] >= start_dt) & 
-                           (data['date'] <= end_dt)]
+        management_layer = folium.FeatureGroup(name="Manejos").add_to(m)
+        data = parse_dates(get_management_data())
+        filtered_data = data[(data['date'] >= start_dt) & (data['date'] <= end_dt)]
 
         marker_cluster = MarkerCluster().add_to(m)
         for _, row in filtered_data.iterrows():
             try:
-                coords_str = row['management_coords']
-                spot_coords = ast.literal_eval(coords_str)
-                if isinstance(spot_coords, list) and len(spot_coords) > 0:
-                    lat, lon = spot_coords[0]
+                coords = ast.literal_eval(row['management_coords'])
+                if isinstance(coords, list) and len(coords) > 0:
                     folium.Marker(
-                        [lat, lon],
-                        popup=f"Observer: {row['observer']}, Date: {row['date'].strftime('%Y-%m-%d')}, Mass(kg): {row['managed_mass_kg']}",
+                        [coords[0][0], coords[0][1]],  # lat, lon
+                        popup=f"""
+                        Observer: {row['observer']}<br>
+                        Date: {row['date'].strftime('%d/%m/%Y')}<br>
+                        Mass: {row['managed_mass_kg']} kg
+                        """,
                         tooltip=f"Manejo {row['management_id']}"
                     ).add_to(marker_cluster)
             except Exception as e:
-                st.error(f"Error adding marker: {e}")
+                st.error(f"Error adding management marker: {e}")
 
+    # --- Locality Layer ---
     if show_locality:
-        layer = folium.FeatureGroup(name="Localidades").add_to(m)
-        data = get_locality_data()
-        data['date'] = pd.to_datetime(data['date'])  # Convert to datetime
+        locality_layer = folium.FeatureGroup(name="Localidades").add_to(m)
+        data = parse_dates(get_locality_data())
         filtered_data = data[(data['date'] >= start_dt) & (data['date'] <= end_dt)]
 
         for _, row in filtered_data.iterrows():
             try:
-                coords_str = row['coords_local']
-                locality_coords = ast.literal_eval(coords_str)
-                if isinstance(locality_coords, list) and len(locality_coords) > 0:
+                coords = ast.literal_eval(row['coords_local'])
+                if isinstance(coords, list) and len(coords) > 0:
                     folium.PolyLine(
-                        locality_coords,
-                        popup=f"Locality: {row['name']}, Date: {row['date'].strftime('%Y-%m-%d')}",
-                        tooltip=f"Locality {row['locality_id']}"
-                    ).add_to(layer)
-                else:
-                    st.error(f"Invalid coordinates for Locality ID {row['locality_id']}: {locality_coords}")
+                        coords,
+                        popup=f"""
+                        Locality: {row['name']}<br>
+                        Date: {row['date'].strftime('%d/%m/%Y')}
+                        """,
+                        tooltip=f"Localidade {row['locality_id']}"
+                    ).add_to(locality_layer)
             except Exception as e:
-                st.error(f"Error adding line for Locality ID {row['locality_id']}: {e}")
+                st.error(f"Error adding locality {row['locality_id']}: {e}")
 
+    # --- Occurrence Layer ---
     if show_occ:
-        marker_cluster = MarkerCluster(disableClusteringAtZoom=5).add_to(m)
-        data = get_occ_data()
-        data['date'] = pd.to_datetime(data['date'])  # Convert to datetime
+        occ_cluster = MarkerCluster(disableClusteringAtZoom=5).add_to(m)
+        data = parse_dates(get_occ_data())
         filtered_data = data[(data['date'] >= start_dt) & (data['date'] <= end_dt)]
 
         for _, row in filtered_data.iterrows():
             try:
-                coords_str = row['spot_coords']
-                spot_coords = ast.literal_eval(coords_str)
-                if isinstance(spot_coords, list) and len(spot_coords) > 0:
-                    lat, lon = spot_coords[0]
-                    occurrence_id = row['occurrence_id']
-                    file_name = row['superficie_photo']
-                    photo_url = f"{base_url}/Upload/UploadImageCoralSol/{occurrence_id}/{file_name}"
+                coords = ast.literal_eval(row['spot_coords'])
+                if isinstance(coords, list) and len(coords) > 0:
+                    photo_url = f"{base_url}/Upload/UploadImageCoralSol/{row['occurrence_id']}/{row['superficie_photo']}"
                     response = requests.get(photo_url)
+                    
+                    popup_html = f"""
+                    <b>Date:</b> {row['date'].strftime('%d/%m/%Y')}<br>
+                    <b>Depth:</b> {row['depth']} m<br>
+                    """
+                    
                     if response.status_code == 200:
-                        base64_image = response.text
-                        popup_html = f"""
-                        <b>Date:</b> {row['date'].strftime('%Y-%m-%d')}<br>
-                        <b>Depth (m):</b> {row['depth']}<br>
-                        <b>Photo:</b><br>
-                        <img src="data:image/png;base64,{base64_image}" width="300"/>
-                        """
+                        popup_html += f'<img src="data:image/png;base64,{response.text}" width="300">'
                     else:
-                        popup_html = f"""
-                        <b>Date:</b> {row['date'].strftime('%Y-%m-%d')}<br>
-                        <b>Depth (m):</b> {row['depth']}<br>
-                        <b>Photo:</b> <i>Image not available (Error {response.status_code})</i>
-                        """
+                        popup_html += f'<i>Photo unavailable (Error {response.status_code})</i>'
+                    
                     folium.Marker(
-                        [lat, lon],
+                        [coords[0][0], coords[0][1]],
                         popup=folium.Popup(popup_html, max_width=300),
                         tooltip=f"Ocorrência {row['occurrence_id']}"
-                    ).add_to(marker_cluster)
+                    ).add_to(occ_cluster)
             except Exception as e:
-                st.error(f"Error adding marker for Occurrence ID {row['occurrence_id']}: {e}")
+                st.error(f"Error adding occurrence {row['occurrence_id']}: {e}")
 
+    # --- Dafor Monitoring Layer ---
     if show_dafor:
-        layer = folium.FeatureGroup(name="Monitoramento").add_to(m)
-        data = get_dafor_data()
-        data['date'] = pd.to_datetime(data['date'])  # Convert to datetime
+        dafor_layer = folium.FeatureGroup(name="Monitoramento").add_to(m)
+        data = parse_dates(get_dafor_data())
         filtered_data = data[(data['date'] >= start_dt) & (data['date'] <= end_dt)]
 
         for _, row in filtered_data.iterrows():
             try:
-                coords_str = row['dafor_coords']
-                dafor_coords = ast.literal_eval(coords_str)
-                if isinstance(dafor_coords, list) and len(dafor_coords) > 0:
+                coords = ast.literal_eval(row['dafor_coords'])
+                if isinstance(coords, list) and len(coords) > 0:
                     folium.PolyLine(
-                        dafor_coords,
-                        popup=f"Locality: {row['locality_id']}, Date: {row['date'].strftime('%Y-%m-%d')}",
-                        tooltip=f"Locality {row['locality_id']}"
-                    ).add_to(layer)
+                        coords,
+                        popup=f"""
+                        Locality: {row['locality_id']}<br>
+                        Date: {row['date'].strftime('%d/%m/%Y')}
+                        """,
+                        tooltip=f"Monitoramento {row['dafor_id']}"
+                    ).add_to(dafor_layer)
             except Exception as e:
-                st.error(f"Error adding line for Locality ID {row['dafor_id']}: {e}")
+                st.error(f"Error adding dafor monitoring {row['dafor_id']}: {e}")
     
     return m
-
-
 # --- Main Logic ---
 def main():
     start_date, end_date, show_management, show_locality, show_occ, show_dafor = render_sidebar()
