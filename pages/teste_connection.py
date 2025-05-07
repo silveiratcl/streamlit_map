@@ -73,28 +73,32 @@ def execute_query(query):
 @st.cache_data
 def get_management_data(ttl=300):
     query = "SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management"
-    df = execute_query(query)
+    with conn.connect() as connection:
+        df = pd.read_sql(query, connection)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_locality_data(ttl=300):
     query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
-    df = execute_query(query)
+    with conn.connect() as connection:
+        df = pd.read_sql(query, connection)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_occ_data(ttl=300):
     query = "SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo FROM data_coralsol_occurrence WHERE Superficie_photo IS NOT NULL LIMIT 10"
-    df = execute_query(query)
+    with conn.connect() as connection:
+        df = pd.read_sql(query, connection)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_dafor_data(ttl=300):
     query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method, Dafor_value FROM data_coralsol_dafor"
-    df = execute_query(query)
+    with conn.connect() as connection:
+        df = pd.read_sql(query, connection)
     df.columns = map(str.lower, df.columns)
     return df
 
