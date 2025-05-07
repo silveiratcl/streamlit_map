@@ -4,6 +4,8 @@ st.logo('./assets/logo_horiz.png',
 
 #icon_image()
 
+st.image('./assets/head_home.png', use_container_width=True)
+
 
 st.title(
     """

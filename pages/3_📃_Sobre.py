@@ -3,6 +3,9 @@ import streamlit as st
 st.set_page_config(page_title="Sobre", page_icon="📃")
 st.logo('./assets/logo_horiz.png', size="large")
 
+st.image('./assets/head_sobre.png', use_container_width=True)
+
+
 st.markdown(
 
 """    
@@ -23,7 +26,7 @@ relacionadas a transectos a cada minuto.
 """
 )
 
-st.image('./assets/about_local.png', caption='Segmentos monitorados', use_container_width=True)
+st.image('./assets/local_segmento_dash.png', caption='Esquema de monitoramento de localidades', use_container_width=True)
 
 
 
@@ -31,10 +34,15 @@ st.image('./assets/about_local.png', caption='Segmentos monitorados', use_contai
 st.markdown(
 """    
 ### Busca ativa
-Snorkeling - Flutuação Na faixa de profundidade de zero a 2 metros do segmento de amostragem, o monitoramento será 
+
+**Snorkeling** 
+
+Na faixa de profundidade de zero a 2 metros do segmento de amostragem, o monitoramento será 
 realizado por um mergulhador de snorkeling. O mergulhador buscará dentro dessa faixa de profundidade, cobrindo o 
 segmento de amostragem e procurando possíveis ocorrências de coral-sol.
-Mergulho Autônomo A técnica de busca ativa para colônias de coral-sol será empregada em cada segmento de amostragem. 
+
+**Mergulho Autônomo (SCUBA)**  
+
 As amostras de mergulho autônomo serão conduzidas por dois pares de mergulhadores. A área operacional para cada par será 
 determinada por faixas de profundidade (por exemplo, de 0 a 8m e de 9 a 15m) ao longo da costa rochosa, visando cobrir a
 maior extensão vertical possível. A divisão das profundidades de varredura entre os pares pode variar dependendo das 
@@ -51,12 +59,17 @@ st.markdown(
 ### DAFOR
 Para classificar os níveis de invasão nos segmentos amostrados, utilizamos uma escala semi-quantitativa de abundância conhecida como escala DAFOR (Sutherland, 2006), especificamente adaptada para avaliar a abundância de coral-sol (Creed & Fleury, 2009). A escala atribui valores a cada classe de abundância relativa, que são descritas da seguinte forma:
 
-Dominante: Esta categoria representa populações altamente evidentes que formam predominantemente manchas monoespecíficas de pelo menos 1m². Essas manchas contêm numerosas colônias isoladas e/ou manchas menores espalhadas pelo substrato.
-Abundante: Os agrupamentos nesta categoria formam manchas essencialmente monoespecíficas variando de 50 a 100 cm de diâmetro. Semelhante à categoria dominante, colônias isoladas e/ou pequenas manchas espalhadas podem ser observadas ao longo do substrato.
-Frequente: Esta classe inclui colônias isoladas e/ou pequenas manchas variando de 10 a 50 cm de diâmetro, espalhadas pelo substrato.
-Ocasional: Aqui, temos menos de 10 colônias ou pequenas manchas menores que 10 cm de diâmetro, mas com mais de 5 colônias espalhadas pelo substrato.
-Raro: Esta categoria abrange casos em que entre 1 e 5 colônias estão dispersas pelo substrato.
-Ausente: Nesta classe, não são encontrados registros de ocorrências de coral-sol.
+**Dominante:** Esta categoria representa populações altamente evidentes que formam predominantemente manchas monoespecíficas de pelo menos 1m². Essas manchas contêm numerosas colônias isoladas e/ou manchas menores espalhadas pelo substrato.
+
+**Abundante:** Os agrupamentos nesta categoria formam manchas essencialmente monoespecíficas variando de 50 a 100 cm de diâmetro. Semelhante à categoria dominante, colônias isoladas e/ou pequenas manchas espalhadas podem ser observadas ao longo do substrato.
+
+**Frequente:** Esta classe inclui colônias isoladas e/ou pequenas manchas variando de 10 a 50 cm de diâmetro, espalhadas pelo substrato.
+
+**Ocasional:** Aqui, temos menos de 10 colônias ou pequenas manchas menores que 10 cm de diâmetro, mas com mais de 5 colônias espalhadas pelo substrato.
+
+**Raro:** Esta categoria abrange casos em que entre 1 e 5 colônias estão dispersas pelo substrato.
+
+**Ausente:** Nesta classe, não são encontrados registros de ocorrências de coral-sol.
 Durante o processo de avaliação, os mergulhadores se deslocam ao longo de transectos delimitados por 1 minuto de amostragem. As observações feitas na escala DAFOR são então convertidas para um índice de abundância relativa (RAI) usando a seguinte classificação: 10 - dominante, 8 - abundante, 6 - frequente, 4 - ocasional, 2 - raro; zero - ausente.
 """
 )
