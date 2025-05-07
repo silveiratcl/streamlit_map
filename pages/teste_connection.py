@@ -28,77 +28,52 @@ st.logo('./assets/logo_horiz.png', size="large")
 def init_connection():
     try:
         connection_details = st.secrets["connections"]["apibd"]
-        
-        # URL-encode the password
         encoded_password = quote_plus(connection_details["password"])
-        
-        # Construct the connection string with the encoded password
         connection_string = (
             f"{connection_details['dialect']}+{connection_details['driver']}://"
             f"{connection_details['username']}:{encoded_password}@"
             f"{connection_details['host']}:{connection_details['port']}/"
             f"{connection_details['database']}"
         )
-        
-        # Create the SQLAlchemy engine
         engine = create_engine(connection_string)
-        
-        # Test the connection
+        # Test connection
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        return engine  # Return engine instead of connection
+        return engine
     except Exception as e:
         st.error(f"Database connection error: {e}")
         raise
 
 
-        # Test the connection
-        #conn = engine.connect()
-        #conn.execute(text("SELECT 1"))  # Simple test query
-       # st.success("Connected to database successfully!")
-        #return conn
-        
-    #except Exception as e:
-     #   st.error(f"Database connection error: {e}")
-      #  raise  # Re-raise the exception to stop execution
-
 # Initialize the connection
-conn = init_connection()
-
-def execute_query(query):
-    with conn.connect() as connection:
-        return pd.read_sql(query, connection)
+engine = init_connection()
 
 # --- Data Fetching Functions ---
 @st.cache_data
-def get_management_data(ttl=300):
-    query = "SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management"
-    with conn.connect() as connection:
-        df = pd.read_sql(query, connection)
+def get_locality_data(ttl=300):
+    query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
+    df = pd.read_sql(query, engine)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_locality_data(ttl=300):
     query = "SELECT locality_id, coords_local, name, date FROM data_coralsol_locality"
-    with conn.connect() as connection:
-        df = pd.read_sql(query, connection)
+    df = pd.read_sql(query, engine)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_occ_data(ttl=300):
     query = "SELECT Occurrence_id, Spot_coords, Date, Depth, Superficie_photo FROM data_coralsol_occurrence WHERE Superficie_photo IS NOT NULL LIMIT 10"
-    with conn.connect() as connection:
-        df = pd.read_sql(query, connection)
+    df = pd.read_sql(query, engine)
     df.columns = map(str.lower, df.columns)
     return df
 
 @st.cache_data
 def get_dafor_data(ttl=300):
     query = "SELECT Dafor_id, Locality_id, Dafor_coords, Date, Horizontal_visibility, Bathymetric_zone, Method, Dafor_value FROM data_coralsol_dafor"
-    with conn.connect() as connection:
-        df = pd.read_sql(query, connection)
+    df = pd.read_sql(query, engine)
     df.columns = map(str.lower, df.columns)
     return df
 
