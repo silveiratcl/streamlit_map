@@ -48,7 +48,6 @@ engine = init_connection()
 
 # --- Data Fetching Functions ---
 @st.cache_data
-@st.cache_data
 def get_management_data(ttl=300):
     query = "SELECT management_id, management_coords, observer, managed_mass_kg, date FROM data_coralsol_management"
     with engine.begin() as connection:
