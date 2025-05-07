@@ -6,78 +6,88 @@ st.logo('./assets/logo_horiz.png', size="large")
 st.markdown(
 
 """    
-## Overview
-A dashboard is an incredibly valuable tool that empowers users to effortlessly 
-visualize and make sense of complex data. By acting as a centralized hub, it presents
-a wealth of essential metrics, trends, and insights in a visually captivating format. 
-This makes it an ideal solution for environmental agencies seeking to acquire valuable
-resources for the Early Detection - Quick Response (EDQR) of invasive species. In this
-documentation, we will explore the pivotal components of data interpretation in the Sun 
-Coral Monitoring Dashboard - PACS REBIO Arvoredo. 
+## Visão Geral
+Um dashboard é uma ferramenta incrivelmente valiosa que permite aos usuários visualizar e compreender dados complexos 
+de forma simples. Ao atuar como uma centralização de dados processados, ele apresenta uma riqueza de métricas essenciais, 
+tendências em um formato visualmente atraente e intuitivo. Isso o torna uma solução ideal para agências ambientais que 
+buscam adquirir recursos valiosos para a Detecção Precoce - Resposta Rápida (EDRR) de espécies invasoras. Nesta documentação, 
+exploraremos os componentes fundamentais da interpretação de dados no Dashboard de Monitoramento 
+do Coral-Sol - PACS REBIO Arvoredo. 
 
+## Protocolo de Monitoramento
 
-
-## Monitoring Protocol
-### Spatial reference
-The monitoring data is obtained in localities, in the locality is defined a segment, and in the extension of a segment are obtained information linked to 1 minute transects recorded by the divers.
+### Aquisição das informações em campo
+Os dados de monitoramento são obtidos em localidades, onde é definido um segmento, e na extensão de um segmento são coletadas informações 
+relacionadas a transectos a cada minuto.
 
 """
 )
 
-st.image('./assets/about_local.png', caption='teste paste pic')
+st.image('./assets/about_local.png', caption='Segmentos monitorados', use_container_width=True)
 
 
 
 
 st.markdown(
 """    
-### Active search
-Snorkelling - Floatation In the depth range of zero to 2 meters of the sampling segment, monitoring will be carried out by a snorkelling diver. The diver will search within this depth range, covering the sampling segment and looking for possible occurrences of sun coral.
-Autonomous Diving The active search technique for sun coral colonies will be employed in each sampling segment. Autonomous diving samples will be conducted by two pairs of divers. The operational area for each pair will be determined by depth ranges (e.g., from 0 to 8m and from 9 to 15m) along the rocky shore, aiming to cover the greatest vertical extension possible. The division of scanning depths between the pairs may vary depending on the bathymetric characteristics of each sampling segment.
-Monitoring
-Monitoring
+### Busca ativa
+Snorkeling - Flutuação Na faixa de profundidade de zero a 2 metros do segmento de amostragem, o monitoramento será 
+realizado por um mergulhador de snorkeling. O mergulhador buscará dentro dessa faixa de profundidade, cobrindo o 
+segmento de amostragem e procurando possíveis ocorrências de coral-sol.
+Mergulho Autônomo A técnica de busca ativa para colônias de coral-sol será empregada em cada segmento de amostragem. 
+As amostras de mergulho autônomo serão conduzidas por dois pares de mergulhadores. A área operacional para cada par será 
+determinada por faixas de profundidade (por exemplo, de 0 a 8m e de 9 a 15m) ao longo da costa rochosa, visando cobrir a
+maior extensão vertical possível. A divisão das profundidades de varredura entre os pares pode variar dependendo das 
+características batimétricas de cada segmento de amostragem.
 
+"""
+)
+
+st.image('./assets/monitora_dash.png', caption='Esquema operacional da busca ativa', use_container_width=True)
+
+
+st.markdown(
+"""
 ### DAFOR
-To classify the invasion levels in the sampled segments, we utilize a semi-quantitative scale of abundance known as the DAFOR scale (Sutherland, 2006), specifically adapted for assessing the abundance of sun coral (Creed & Fleury, 2009). The scale assigns values to each relative abundance class, which are described as follows:
+Para classificar os níveis de invasão nos segmentos amostrados, utilizamos uma escala semi-quantitativa de abundância conhecida como escala DAFOR (Sutherland, 2006), especificamente adaptada para avaliar a abundância de coral-sol (Creed & Fleury, 2009). A escala atribui valores a cada classe de abundância relativa, que são descritas da seguinte forma:
 
-Dominant: This category represents highly evident populations that form predominantly monospecific patches of at least 1m². These patches contain numerous isolated colonies and/or smaller patches scattered throughout the substrate.
-Abundant: Clusters within this category form essentially monospecific patches ranging from 50 to 100 cm in diameter. Similar to the dominant category, isolated colonies and/or small scattered patches can be observed throughout the substrate.
-Frequent: This class includes isolated colonies and/or small patches ranging from 10 to 50 cm in diameter, scattered across the substrate.
-Occasional: Here, we have less than 10 colonies or small patches smaller than 10 cm in diameter, but with more than 5 scattered colonies throughout the substrate.
-Rare: This category encompasses instances where between 1 and 5 colonies are sparsely scattered throughout the substrate.
-Absent: In this class, no records of sun coral occurrences are found.
-During the assessment process, divers move along transects delimited by 1 minute of sampling. Observations made on the DAFOR scale are then converted to a relative abundance index (RAI) using the following classification: 10 - dominant, 8 - abundant, 6 - frequent, 4 - occasional, 2 - rare; zero - absent.
+Dominante: Esta categoria representa populações altamente evidentes que formam predominantemente manchas monoespecíficas de pelo menos 1m². Essas manchas contêm numerosas colônias isoladas e/ou manchas menores espalhadas pelo substrato.
+Abundante: Os agrupamentos nesta categoria formam manchas essencialmente monoespecíficas variando de 50 a 100 cm de diâmetro. Semelhante à categoria dominante, colônias isoladas e/ou pequenas manchas espalhadas podem ser observadas ao longo do substrato.
+Frequente: Esta classe inclui colônias isoladas e/ou pequenas manchas variando de 10 a 50 cm de diâmetro, espalhadas pelo substrato.
+Ocasional: Aqui, temos menos de 10 colônias ou pequenas manchas menores que 10 cm de diâmetro, mas com mais de 5 colônias espalhadas pelo substrato.
+Raro: Esta categoria abrange casos em que entre 1 e 5 colônias estão dispersas pelo substrato.
+Ausente: Nesta classe, não são encontrados registros de ocorrências de coral-sol.
+Durante o processo de avaliação, os mergulhadores se deslocam ao longo de transectos delimitados por 1 minuto de amostragem. As observações feitas na escala DAFOR são então convertidas para um índice de abundância relativa (RAI) usando a seguinte classificação: 10 - dominante, 8 - abundante, 6 - frequente, 4 - ocasional, 2 - raro; zero - ausente.
+"""
+)
 
-
-## Data displayed on Map
-
-### Indicators
-
-Transects with Sun Coral (TWSC): Number of sun coral transects within the locality limits. This metric compensates for the low relative abundances assessed by DAFOR. Selecting a date controls the displayed data period on the map.
-Habitat Suitability Index (HSI): Average HSI value calculated for the locality. Selecting a date controls the displayed data period on the map.
-TWSC/1000m: Number of sun coral transects within the locality limits per 1000 meters of monitoring effort. Selecting a date controls the displayed data period on the map.
-Number of Transects by Locality (NTL): Number of transects within the locality. Selecting a date controls the displayed data period on the map
-Days since the last management: Computes days elapsed since last management.
-Days since the last check: Computes days elapsed since last check.
-Layers
-Occurrence: Historical records of sun coral occurrences within REBIO Arvoredo Limits. The data is despaired with TWSC once the data using the DAFOR protocol started to be gathered in January/2023. Selecting a date controls the displayed data period on the map.
-DAFOR: Raw data recorded during monitoring. Selecting a date controls the displayed data period on the map.
-Geomorphology: Raw data recorded during monitoring. Selecting a date controls the displayed data period on the map.
-Target Location: Locations in the PACS Arvoredo project.
-Locality: Limits and nomenclature of the localities within REBIO Arvoredo.
-REBIO Limits: Limits of the REBIO Arvoredo Conservation Unit.
-Infoboxes
-Monitored location: Number of localities monitored at REBIO and surroundings.
-
-Number of segments: The segment is a line representing where the divers did the monitoring protocol, this box shows the count.
-
-Transects with sun coral: Transect is part of segment obtained in one minute of active search. Here is showed the count of segments positive for sun coral occurrence.
-
-Dive Time: Sun of dive time by all pair of divers in the monitoring data.
+st.image('./assets/dafor_eng.png', caption='Escala DAFOR para cálculo de IAR (Creed et al. 2025 - in press)', use_container_width=True)
 
 
 
-### References and useful links
+st.markdown(
+"""
+### Indicadores
+em contrução
+"""
+)
+    
+st.markdown(
+
+"""
+### Camadas
+em contrução
+
+"""
+)
+
+
+
+st.markdown(
+"""
+### Referências e links úteis
+
+CREED, et al.2025. A bioinvasão do Coral-Sol. in press
 
 CREED, J.C.; FLEURY, B.G. 2009. Monitoramento extensivo de coral-sol (Tubastraea coccinea e T. tagusensis): protocolo de semi-quantificação. Projeto Coral-Sol, Instituto Biodiversidade Marinha, Rio de Janeiro. p 1.
 
